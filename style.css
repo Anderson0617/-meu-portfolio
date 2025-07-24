@@ -3,12 +3,13 @@
     padding: 0;
     font-family: "Oswald", sans-serif;
     box-sizing: border-box;
+     background: transparent; /* evita cobrir o vídeo com fundo branco */
 }
 
-html,
 body {
     height: 100%;
     overflow-x: hidden;
+    background-color: transparent;
 }
 
 .icon-group {
@@ -155,14 +156,20 @@ button.clicked {
     transform: scale(1.2);
 }
 
+.caixa-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -1;
+}
+
 .caixa-video video {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    z-index: -1;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
 }
 
 
