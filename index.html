@@ -1,75 +1,80 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Vídeo com Fallback</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-
-    video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: -1;
-    }
-
-    .botao-play {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      padding: 16px 32px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      z-index: 10;
-      display: none;
-    }
-
-    .botao-play:hover {
-      background-color: rgba(0, 0, 0, 0.85);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+    <title>Meu portfólio</title>
 </head>
+
 <body>
 
-  <video id="meuVideo" autoplay muted loop playsinline>
-    <source src="./video/trabalho73.mp4" type="video/mp4">
-    Seu navegador não suporta vídeos.
-  </video>
+    <h2 class="titulo-social">
+        <span class="azul">CONTACTS</span>
+        <span class="verde">AND</span>
+        <span class="amarelo">PROJECTS</span>
+    </h2>
 
-  <button id="botaoPlay" class="botao-play">▶ Tocar vídeo</button>
+    <nav class="social-nav">
 
-  <script>
-    const video = document.getElementById('meuVideo');
-    const botaoPlay = document.getElementById('botaoPlay');
+        <a href="https://www.linkedin.com/in/anderson-olivera-b15749276" target="_blank" title="LinkedIn">
+            <img src="img/linkedin-icon.png" alt="LinkedIn">
+        </a>
+        <a href="https://github.com/anderson0617" target="_blank" title="GitHub">
+            <img src="img/github-icon.png" alt="GitHub">
+        </a>
+        <a href="http://www.youtube.com/@andersonolivera" target="_blank" title="YouTube">
+            <img src="img/youtube-icon.png" alt="YouTube">
+        </a>
+        <a href="https://wa.me/5548991691906" target="_blank" title="WhatsApp">
+            <img src="img/whatsapp-icon.png" alt="WhatsApp">
+        </a>
+        <a href="mailto:anderson090485@gmail.com" target="_blank" title="E-mail">
+            <img src="img/email-icon.png" alt="E-mail">
+        </a>
 
-    video.play().catch(() => {
-      // Se o autoplay falhar, mostra o botão
-      botaoPlay.style.display = 'block';
-    });
+    </nav>
 
-    botaoPlay.addEventListener('click', () => {
-      video.play();
-      botaoPlay.style.display = 'none';
-    });
-  </script>
+    </div>
 
+    <main class="container">
+
+        <section class="icones-paragravos">
+
+            <div class="icon-group">
+                <img src="img/N8n-logo-new.svg.png" alt="igone-n8n">
+                <img src="img/icones1.png" alt="icones-html-css-java.js">
+            </div>
+        </section>
+
+        <section class="button-logo-eu">
+
+            <img src="img/EU_SEM_FUNDO_TRANSPRENTE(2).png" alt="img autor" class="logo-eu">
+            <div>
+                <button id="btnSobre">SOBRE</button>
+            </div>
+            <div id="caixaSobre" class="caixa-sobre">
+                <p>Sou Anderson Oliveira, desenvolvedor front-end apaixonado por tecnologia e automações. Construo
+                    projetos com HTML, CSS, JavaScript e ferramentas como N8N.</p>
+            </div>
+        </section>
+        <div class="caixa-video">
+            <video autoplay muted loop playsinline>
+                <source src="video/trabalho73.mp4" type="video/mp4">
+                Seu navegador não suporta vídeo.
+            </video>
+        </div>
+
+
+    </main>
+
+    <script src="script.js"></script>
 </body>
+
 </html>
