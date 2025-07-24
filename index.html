@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Vídeo com Fallback</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    .botao-play {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      padding: 16px 32px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      z-index: 10;
+      display: none;
+    }
+
+    .botao-play:hover {
+      background-color: rgba(0, 0, 0, 0.85);
+    }
+  </style>
+</head>
+<body>
+
+  <video id="meuVideo" autoplay muted loop playsinline>
+    <source src="./video/trabalho73.mp4" type="video/mp4">
+    Seu navegador não suporta vídeos.
+  </video>
+
+  <button id="botaoPlay" class="botao-play">▶ Tocar vídeo</button>
+
+  <script>
+    const video = document.getElementById('meuVideo');
+    const botaoPlay = document.getElementById('botaoPlay');
+
+    video.play().catch(() => {
+      // Se o autoplay falhar, mostra o botão
+      botaoPlay.style.display = 'block';
+    });
+
+    botaoPlay.addEventListener('click', () => {
+      video.play();
+      botaoPlay.style.display = 'none';
+    });
+  </script>
+
+</body>
+</html>
