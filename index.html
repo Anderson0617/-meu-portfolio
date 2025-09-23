@@ -1,6 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,72 +11,120 @@
         rel="stylesheet">
     <title>Meu portfólio</title>
 </head>
-
 <body>
-
     <div class="caixa-video">
-        <video autoplay muted loop playsinline>
+        <video autoplay muted loop playsinline poster="img/icones1.png">
             <source src="./video/trabalho73.mp4" type="video/mp4">
             Seu navegador não suporta vídeo.
         </video>
     </div>
+    <div class="video-fallback" aria-hidden="true"></div>
 
-    <h2 class="titulo-social">
-        <span class="azul">CONTACTS</span>
-        <span class="verde">AND</span>
-        <span class="amarelo">PROJECTS</span>
-    </h2>
-
-    <nav class="social-nav">
-        <a href="https://www.linkedin.com/in/anderson-olivera-dev" target="_blank" title="LinkedIn">
-            <img src="img/linkedin-icon.png" alt="LinkedIn">
-        </a>
-        <a href="https://github.com/anderson0617" target="_blank" title="GitHub">
-            <img src="img/github-icon.png" alt="GitHub">
-        </a>
-        <a href="http://www.youtube.com/@andersonolivera" target="_blank" title="YouTube">
-            <img src="img/youtube-icon.png" alt="YouTube">
-        </a>
-        <a href="https://wa.me/5548991691906" target="_blank" title="WhatsApp">
-            <img src="img/whatsapp-icon.png" alt="WhatsApp">
-        </a>
-        <a href="mailto:anderson090485@gmail.com" target="_blank" title="E-mail">
-            <img src="img/email-icon.png" alt="E-mail">
-        </a>
-
-    </nav>
+    <header class="top-bar">
+        <div class="header-main">
+            <h2 class="titulo-social">
+                <span class="azul">CONTACTS</span>
+                <span class="verde">AND</span>
+                <span class="amarelo">PROJECTS</span>
+            </h2>
+            <nav class="social-nav" aria-label="Redes sociais e contatos">
+                <a href="https://www.linkedin.com/in/anderson-olivera-dev" target="_blank" rel="noopener noreferrer"
+                    title="LinkedIn">
+                    <img src="img/linkedin-icon.png" alt="LinkedIn">
+                </a>
+                <a href="https://github.com/anderson0617" target="_blank" rel="noopener noreferrer" title="GitHub">
+                    <img src="img/github-icon.png" alt="GitHub">
+                </a>
+                <a href="http://www.youtube.com/@andersonolivera" target="_blank" rel="noopener noreferrer" title="YouTube">
+                    <img src="img/youtube-icon.png" alt="YouTube">
+                </a>
+                <a href="https://wa.me/5548991691906" target="_blank" rel="noopener noreferrer" title="WhatsApp">
+                    <img src="img/whatsapp-icon.png" alt="WhatsApp">
+                </a>
+                <a href="mailto:anderson090485@gmail.com" target="_blank" rel="noopener noreferrer" title="E-mail">
+                    <img src="img/email-icon.png" alt="E-mail">
+                </a>
+            </nav>
+        </div>
+        <button id="toggleTema" class="toggle-tema" type="button" aria-label="Alternar modo escuro">
+            &#x1F319;
+        </button>
+    </header>
 
     <main class="container">
-
-        <section class="icones-paragravos">
-
+        <section class="hero">
             <div class="icon-group">
-                <img src="img/N8n-logo-new.svg.png" alt="igone-n8n">
-                <img src="img/icones1.png" alt="icones-html-css-java.js">
+                <img src="img/N8n-logo-new.svg.png" alt="Logo n8n">
+                <img src="img/icones1.png" alt="Ícones HTML, CSS e JavaScript">
+            </div>
+
+            <div class="sobre-area">
+                <img src="img/EU_SEM_FUNDO_TRANSPRENTE(2).png" alt="Anderson Oliveira" class="logo-eu">
+                <button id="btnSobre" type="button">SOBRE</button>
+                <div id="caixaSobre" class="caixa-sobre" aria-hidden="true">
+                    <p>
+                        Sou Anderson Oliveira, tecnólogo, desenvolvedor Full-Stack e estudante do DevClub. Tenho
+                        experiência prática em HTML, CSS e JavaScript, manipulação do DOM, design responsivo e GitHub.
+                        Apaixonado por transformar ideias em projetos digitais funcionais, aplico automação com
+                        ferramentas como o n8n para otimizar processos e criar soluções inovadoras.
+                    </p>
+                </div>
             </div>
         </section>
 
-        <section class="button-logo-eu">
-
-            <img src="img/EU_SEM_FUNDO_TRANSPRENTE(2).png" alt="img autor" class="logo-eu">
-            <div>
-                <button id="btnSobre">SOBRE</button>
-            </div>
-            <div id="caixaSobre" class="caixa-sobre">
-                <p>Sou Anderson Oliveira, Tequilogo, desenvolvedor *Full-stack* 
-                    Estudante da *DevClub. Tenho experiência prática em **HTML, CSS, JavaScript*, manipulação do DOM,
-                    design responsivo, GitHub. Sou apaixonado por transformar ideias em projetos digitais
-                    funcionais, criando ferramentas interativas e inteligentes com foco em usabilidade e inovação, e uso
-                    a automação com ferramentas como o n8n para otimizar processos.
-                </p>
+        <section class="projetos" aria-labelledby="titulo-projetos">
+            <h2 id="titulo-projetos">Meus Projetos</h2>
+            <div class="cards">
+                <article class="card">
+                    <img src="img/dev-burger.svg" alt="Dev-Burger" loading="lazy">
+                    <h3>Dev-Burger</h3>
+                    <a href="https://anderson0617.github.io/Dev-Burger-5.1" target="_blank" rel="noopener noreferrer">&#x1F517; Ver
+                        Online</a>
+                    <a href="https://github.com/Anderson0617/Dev-Burger-5.1" target="_blank" rel="noopener noreferrer">&#x1F4BB;
+                        GitHub</a>
+                </article>
+                <article class="card">
+                    <img src="img/mentor-dev.svg" alt="Mentor.Dev" loading="lazy">
+                    <h3>Mentor.Dev</h3>
+                    <a href="https://anderson0617.github.io/mentor-dev/" target="_blank" rel="noopener noreferrer">&#x1F517; Ver
+                        Online</a>
+                    <a href="https://github.com/Anderson0617/mentor-dev" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                </article>
+                <article class="card">
+                    <img src="img/cyber-cafe-dev.svg" alt="Cyber-Caf&#xE9; Dev" loading="lazy">
+                    <h3>Cyber-Caf&#xE9; Dev</h3>
+                    <a href="https://anderson0617.github.io/Cyber-Caf--Dev/" target="_blank" rel="noopener noreferrer">&#x1F517; Ver
+                        Online</a>
+                    <a href="https://github.com/Anderson0617/Cyber-Caf--Dev" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                </article>
             </div>
         </section>
 
-        </div>
-
+        <section class="skills" aria-labelledby="titulo-skills">
+            <h2 id="titulo-skills">Minhas Competências</h2>
+            <div class="badges">
+                <span>HTML</span>
+                <span>CSS</span>
+                <span>JavaScript</span>
+                <span>React</span>
+                <span>n8n</span>
+                <span>GitHub</span>
+            </div>
+        </section>
     </main>
+
+    <footer>
+        <p>&copy; 2025 - Desenvolvido por Anderson Oliveira | Inspirado no DevClub &#x1F680;</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>
-
 </html>
+
+
+
+
+
+
+
+

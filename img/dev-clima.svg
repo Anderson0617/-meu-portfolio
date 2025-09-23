@@ -1,0 +1,13 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="560" height="360" viewBox="0 0 560 360">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4facfe" />
+      <stop offset="100%" stop-color="#00f2fe" />
+    </linearGradient>
+  </defs>
+  <rect width="560" height="360" rx="32" ry="32" fill="url(#bg)" />
+  <g fill="#0b1b3b" font-family="Oswald, Arial, sans-serif" text-anchor="middle">
+    <text x="50%" y="48%" font-size="64" font-weight="700">Dev Clima</text>
+    <text x="50%" y="63%" font-size="28" font-weight="500">Previsão em tempo real</text>
+  </g>
+</svg>
