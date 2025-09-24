@@ -1,6 +1,45 @@
-﻿const btnSobre = document.getElementById("btnSobre");
+const btnSobre = document.getElementById("btnSobre");
 const caixaSobre = document.getElementById("caixaSobre");
 const toggleTema = document.getElementById("toggleTema");
+const btnMusicas = document.getElementById("btnMusicas");
+const playerMusicas = document.getElementById("playerMusicas");
+const fraseEfeitoContainer = document.querySelector(".frase-efeito");
+
+if (fraseEfeitoContainer) {
+    const frase = "Obrigado por visitar meu portf\u00f3lio, sua aten\u00e7\u00e3o faz toda a diferen\u00e7a! \uD83D\uDE4C";
+    let indiceAtual = 0;
+    let apagando = false;
+
+    const digitar = () => {
+        if (!apagando) {
+            fraseEfeitoContainer.textContent = frase.slice(0, indiceAtual++);
+            if (indiceAtual > frase.length) {
+                apagando = true;
+                setTimeout(digitar, 2000);
+                return;
+            }
+        } else {
+            fraseEfeitoContainer.textContent = frase.slice(0, indiceAtual--);
+            if (indiceAtual < 0) {
+                apagando = false;
+                indiceAtual = 0;
+            }
+        }
+
+        setTimeout(digitar, apagando ? 50 : 100);
+    };
+
+    digitar();
+}
+
+if (btnMusicas && playerMusicas) {
+    btnMusicas.addEventListener("click", () => {
+        const estaOculto = playerMusicas.classList.toggle("oculto");
+        playerMusicas.setAttribute("aria-hidden", estaOculto ? "true" : "false");
+        btnMusicas.setAttribute("aria-expanded", estaOculto ? "false" : "true");
+    });
+}
+
 
 if (btnSobre && caixaSobre) {
     btnSobre.addEventListener("click", () => {
@@ -53,8 +92,8 @@ if (!prefereMenosMovimento && window.matchMedia && window.matchMedia('(pointer: 
 
         const rastro = document.createElement('div');
         rastro.className = 'rastro';
-        rastro.style.left = `${evento.pageX}px`;
-        rastro.style.top = `${evento.pageY}px`;
+        rastro.style.left = `${evento.clientX}px`;
+        rastro.style.top = `${evento.clientY}px`;
         document.body.appendChild(rastro);
 
         setTimeout(() => {
@@ -67,3 +106,8 @@ if (!prefereMenosMovimento && window.matchMedia && window.matchMedia('(pointer: 
         elemento.addEventListener('mouseleave', () => document.body.classList.remove('no-rastro'));
     });
 }
+
+
+
+
+

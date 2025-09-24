@@ -1,27 +1,39 @@
 ﻿<!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="img/icones1.png" type="image/png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        href="https://fonts.googleapis.com/css2�family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
         rel="stylesheet">
-    <title>Meu portfólio</title>
+    <title>Meu portfolio</title>
 </head>
+
 <body>
+    <header class="main-header" aria-label="Navegaçao principal">
+        <nav class="main-nav">
+            <a class="nav-link nav-link--topo" href="#topo">Topo</a>
+            <a class="nav-link nav-link--projetos" href="#projetos">Projetos</a>
+            <a class="nav-link nav-link--graficos" href="#graficos">Gráficos</a>
+        </nav>
+    </header>
     <div class="caixa-video">
         <video autoplay muted loop playsinline poster="img/icones1.png">
             <source src="./video/trabalho73.mp4" type="video/mp4">
-            Seu navegador não suporta vídeo.
+            Seu navegador nao suporta video.
         </video>
     </div>
     <div class="video-fallback" aria-hidden="true"></div>
 
-    <header class="top-bar">
+    <header class="top-bar" id="topo">
         <div class="header-main">
+            <div class="frase-efeito" aria-live="polite"></div>
+
             <h2 class="titulo-social">
                 <span class="azul">CONTACTS</span>
                 <span class="verde">AND</span>
@@ -35,7 +47,8 @@
                 <a href="https://github.com/anderson0617" target="_blank" rel="noopener noreferrer" title="GitHub">
                     <img src="img/github-icon.png" alt="GitHub">
                 </a>
-                <a href="http://www.youtube.com/@andersonolivera" target="_blank" rel="noopener noreferrer" title="YouTube">
+                <a href="http://www.youtube.com/@andersonolivera" target="_blank" rel="noopener noreferrer"
+                    title="YouTube">
                     <img src="img/youtube-icon.png" alt="YouTube">
                 </a>
                 <a href="https://wa.me/5548991691906" target="_blank" rel="noopener noreferrer" title="WhatsApp">
@@ -55,7 +68,7 @@
         <section class="hero">
             <div class="icon-group">
                 <img src="img/N8n-logo-new.svg.png" alt="Logo n8n">
-                <img src="img/icones1.png" alt="Ícones HTML, CSS e JavaScript">
+                <img src="img/icones1.png" alt="icones HTML, CSS e JavaScript">
             </div>
 
             <div class="sobre-area">
@@ -63,45 +76,51 @@
                 <button id="btnSobre" type="button">SOBRE</button>
                 <div id="caixaSobre" class="caixa-sobre" aria-hidden="true">
                     <p>
-                        Sou Anderson Oliveira, tecnólogo, desenvolvedor Full-Stack e estudante do DevClub. Tenho
-                        experiência prática em HTML, CSS e JavaScript, manipulação do DOM, design responsivo e GitHub.
-                        Apaixonado por transformar ideias em projetos digitais funcionais, aplico automação com
-                        ferramentas como o n8n para otimizar processos e criar soluções inovadoras.
+                        Sou Anderson J Oliveira, tecnólogo, desenvolvedor Full-Stack e estudante do DevClub.
+                        Tenho experiência prática em HTML, CSS e JavaScript, manipulação do DOM,
+                        design responsivo e GitHub. Apaixonado por transformar ideias em projetos digitais funcionais,
+                        aplico automação com ferramentas como o n8n para otimizar processos e criar soluções inovadoras.
                     </p>
                 </div>
             </div>
         </section>
 
-        <section class="projetos" aria-labelledby="titulo-projetos">
+        <section class="projetos" id="projetos" aria-labelledby="titulo-projetos">
             <h2 id="titulo-projetos">Meus Projetos</h2>
             <div class="cards">
                 <article class="card">
                     <img src="img/dev-burger.svg" alt="Dev-Burger" loading="lazy">
                     <h3>Dev-Burger</h3>
-                    <a href="https://anderson0617.github.io/Dev-Burger-5.1" target="_blank" rel="noopener noreferrer">&#x1F517; Ver
+                    <a href="https://anderson0617.github.io/Dev-Burger-5.1" target="_blank"
+                        rel="noopener noreferrer">&#x1F517; Ver
                         Online</a>
-                    <a href="https://github.com/Anderson0617/Dev-Burger-5.1" target="_blank" rel="noopener noreferrer">&#x1F4BB;
+                    <a href="https://github.com/Anderson0617/Dev-Burger-5.1" target="_blank"
+                        rel="noopener noreferrer">&#x1F4BB;
                         GitHub</a>
                 </article>
                 <article class="card">
                     <img src="img/mentor-dev.svg" alt="Mentor.Dev" loading="lazy">
                     <h3>Mentor.Dev</h3>
-                    <a href="https://anderson0617.github.io/mentor-dev/" target="_blank" rel="noopener noreferrer">&#x1F517; Ver
+                    <a href="https://anderson0617.github.io/mentor-dev/" target="_blank"
+                        rel="noopener noreferrer">&#x1F517; Ver
                         Online</a>
-                    <a href="https://github.com/Anderson0617/mentor-dev" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                    <a href="https://github.com/Anderson0617/mentor-dev" target="_blank"
+                        rel="noopener noreferrer">&#x1F4BB; GitHub</a>
                 </article>
                 <article class="card">
                     <img src="img/cyber-cafe-dev.svg" alt="Cyber-Caf&#xE9; Dev" loading="lazy">
                     <h3>Cyber-Caf&#xE9; Dev</h3>
-                    <a href="https://anderson0617.github.io/Cyber-Caf--Dev/" target="_blank" rel="noopener noreferrer">&#x1F517; Ver
+                    <a href="https://anderson0617.github.io/Cyber-Caf--Dev/" target="_blank"
+                        rel="noopener noreferrer">&#x1F517; Ver
                         Online</a>
-                    <a href="https://github.com/Anderson0617/Cyber-Caf--Dev" target="_blank" rel="noopener noreferrer">&#x1F4BB; GitHub</a>
+                    <a href="https://github.com/Anderson0617/Cyber-Caf--Dev" target="_blank"
+                        rel="noopener noreferrer">&#x1F4BB; GitHub</a>
                 </article>
             </div>
         </section>
 
         <section class="skills" aria-labelledby="titulo-skills">
-            <h2 id="titulo-skills">Minhas Competências</h2>
+            <h2 id="titulo-skills">Minhas Competencias</h2>
             <div class="badges">
                 <span>HTML</span>
                 <span>CSS</span>
@@ -113,18 +132,129 @@
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 - Desenvolvido por Anderson Oliveira | Inspirado no DevClub &#x1F680;</p>
+    <section class="evolucao" id="graficos" aria-labelledby="titulo-evolucao">
+        <h2 id="titulo-evolucao">&#x1F4C8; Minha evolu&#231;&#227;o em constante aprendizado</h2>
+        <figure class="evolucao-grafico">
+            <svg role="img" aria-describedby="legenda-evolucao" viewBox="0 0 1000 420"
+                preserveAspectRatio="xMidYMid meet">
+                <title id="descricao-grafico">Gr&#225;fico de desempenho em degraus mostrando minha evolu&#231;&#227;o
+                    em diferentes tecnologias ao longo do tempo.</title>
+                <defs>
+                    <linearGradient id="gridGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(255,255,255,0.08)" />
+                        <stop offset="100%" stop-color="rgba(255,255,255,0.02)" />
+                    </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="1000" height="420" fill="url(#gridGradient)" />
+                <g class="grid">
+                    <line x1="0" y1="360" x2="1000" y2="360" />
+                    <line x1="0" y1="280" x2="1000" y2="280" />
+                    <line x1="0" y1="200" x2="1000" y2="200" />
+                    <line x1="0" y1="120" x2="1000" y2="120" />
+                    <line x1="0" y1="40" x2="1000" y2="40" />
+                    <line x1="120" y1="0" x2="120" y2="420" />
+                    <line x1="260" y1="0" x2="260" y2="420" />
+                    <line x1="400" y1="0" x2="400" y2="420" />
+                    <line x1="540" y1="0" x2="540" y2="420" />
+                    <line x1="680" y1="0" x2="680" y2="420" />
+                    <line x1="820" y1="0" x2="820" y2="420" />
+                </g>
+                <g class="axes">
+                    <line x1="60" y1="380" x2="60" y2="30" />
+                    <line x1="60" y1="380" x2="960" y2="380" />
+                    <text x="30" y="40" class="axis-label">N&#237;vel</text>
+                    <text x="930" y="410" class="axis-label">Tempo</text>
+                    <text x="20" y="360" class="tick">0%</text>
+                    <text x="20" y="280" class="tick">40%</text>
+                    <text x="20" y="200" class="tick">60%</text>
+                    <text x="20" y="120" class="tick">80%</text>
+                    <text x="20" y="50" class="tick">95%</text>
+                </g>
+                <g class="series html">
+                    <path d="M60 340 H160 V280 H260 V240 H360 V210 H480 V190 H600 V180 H720 V170 H840 V165" />
+                </g>
+                <g class="series css">
+                    <path d="M60 350 H140 V300 H240 V250 H340 V220 H460 V205 H580 V195 H700 V188 H820 V182" />
+                </g>
+                <g class="series javascript">
+                    <path d="M60 360 H160 V320 H260 V270 H360 V230 H480 V210 H600 V198 H720 V190 H840 V185" />
+                </g>
+                <g class="series react">
+                    <path d="M60 365 H180 V330 H300 V290 H420 V260 H540 V235 H660 V220 H780 V208 H900 V202" />
+                </g>
+                <g class="series github">
+                    <path d="M60 350 H150 V315 H260 V275 H380 V250 H500 V235 H620 V225 H740 V218 H860 V212" />
+                </g>
+                <g class="series n8n">
+                    <path d="M60 370 H160 V335 H280 V300 H420 V280 H560 V265 H700 V252 H820 V240 H940 V233" />
+                </g>
+                <g class="series automacao">
+                    <path d="M60 360 H200 V320 H340 V285 H480 V260 H620 V240 H760 V225 H880 V215 H960 V210" />
+                </g>
+            </svg>
+            <figcaption class="evolucao-legenda" id="legenda-evolucao">
+                <ul>
+                    <li><span class="dot html"></span>HTML</li>
+                    <li><span class="dot css"></span>CSS</li>
+                    <li><span class="dot javascript"></span>JavaScript</li>
+                    <li><span class="dot react"></span>React</li>
+                    <li><span class="dot github"></span>GitHub</li>
+                    <li><span class="dot n8n"></span>n8n</li>
+                    <li><span class="dot automacao"></span>Automa&#231;&#227;o / IA</li>
+                </ul>
+            </figcaption>
+        </figure>
+    </section>
+    <div class="mensagem-final">
+        <p>A tecnologia mudou minha vida para melhor. Hoje n&atilde;o me vejo sem programar, porque cada linha de
+            c&oacute;digo me leva mais longe &mdash; e o c&eacute;u n&atilde;o tem limites &#x1F680;&#x1F9E0;.</p>
+    </div>
+    <footer id="contato">
+        <p>&copy; 2025 - Desenvolvido por Anderson J Oliveira </p>
     </footer>
+
+    <button id="btnMusicas" type="button" aria-controls="playerMusicas" aria-expanded="false">&#x1F3A7; D&#234; o
+        play</button>
+
+    <div id="playerMusicas" class="oculto" aria-hidden="true">
+        <h3>&#x1F3A7; Minhas m&uacute;sicas para programar</h3>
+
+        <div class="player-item">
+            <span class="player-label">M&uacute;sica 1</span>
+            <audio controls preload="none">
+                <source src="musicas/1.mp3" type="audio/mpeg">
+                Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
+            </audio>
+        </div>
+
+        <div class="player-item">
+            <span class="player-label">M&uacute;sica 2</span>
+            <audio controls preload="none">
+                <source src="musicas/2.mp3" type="audio/mpeg">
+                Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
+            </audio>
+        </div>
+
+        <div class="player-item">
+            <span class="player-label">M&uacute;sica 3</span>
+            <audio controls preload="none">
+                <source src="musicas/3.mp3" type="audio/mpeg">
+                Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
+            </audio>
+        </div>
+
+        <div class="player-item">
+            <span class="player-label">M&uacute;sica 4</span>
+            <audio controls preload="none">
+                <source src="musicas/4.mp3" type="audio/mpeg">
+                Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
+            </audio>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
+
 </html>
-
-
-
-
-
-
 
 
