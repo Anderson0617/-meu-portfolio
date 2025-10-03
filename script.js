@@ -1246,9 +1246,9 @@ if (graficoCanvas) {
 
                     if (Object.keys(limitesDetectados).length) {
                         aplicarLimites(limitesDetectados);
-                        atualizarStatusGrafico(`Dados do n8n às ${horarioConsulta}: ${montarResumoLimites()}.`);
+                        atualizarStatusGrafico(`Dados do n8n Ã s ${horarioConsulta}: ${montarResumoLimites()}.`);
                     } else {
-                        atualizarStatusGrafico(`n8n sem novos dados às ${horarioConsulta}. Limites atuais: ${montarResumoLimites()}.`);
+                        atualizarStatusGrafico(`n8n sem novos dados Ã s ${horarioConsulta}. Limites atuais: ${montarResumoLimites()}.`);
                     }
 
                     reiniciarCiclo();
