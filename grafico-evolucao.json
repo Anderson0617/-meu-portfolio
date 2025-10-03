@@ -1,0 +1,84 @@
+{
+  "name": "grafico-evolucao",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET,POST",
+        "path": "grafico-evolucao",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        -48
+      ],
+      "id": "7edb90f0-0345-40ea-b60b-22585c6e8862",
+      "name": "Gatilho Webhook",
+      "webhookId": "879a2797-b37a-4731-a5ca-53351d9bbb58"
+    },
+    {
+      "parameters": {
+        "functionCode": "const base = 73;\nreturn [\n  {\n    json: {\n      HTML: Math.floor(Math.random() * (99 - base)) + base,\n      CSS: Math.floor(Math.random() * (99 - base)) + base,\n      JavaScript: Math.floor(Math.random() * (99 - base)) + base,\n      React: Math.floor(Math.random() * (99 - base)) + base,\n      n8n: Math.floor(Math.random() * (99 - base)) + base,\n      GitHub: Math.floor(Math.random() * (99 - base)) + base\n    }\n  }\n];"
+      },
+      "id": "aef43ea0-a0a1-482b-9464-69cb97fb0736",
+      "name": "Gerar Dados",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "d046eea7-a7ee-4f62-9666-204f10e17bc7",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -64
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gatilho Webhook": {
+      "main": [
+        [
+          {
+            "node": "Gerar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar Dados": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "2bb7685e-965f-4611-9026-f04801e40d90",
+  "meta": {
+    "instanceId": "47d349e7885c0111fbb9a9d64fd4722bbf4f48a1b2f54c947dc6542c695c26b9"
+  },
+  "id": "h6d6LAIQvEHzo3uu",
+  "tags": []
+}
