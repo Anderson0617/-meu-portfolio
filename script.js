@@ -122,7 +122,7 @@ const andersonAIChatForm = document.getElementById("andersonAIChatForm");
 const andersonAIChatInput = document.getElementById("andersonAIChatInput");
 const andersonAIChatMessages = document.getElementById("andersonAIChatMessages");
 const andersonAIChatStatus = document.getElementById("andersonAIChatStatus");
-const N8N_AI_ENDPOINT = [{name/webhook/anderson-ai;/////////////////////////
+/////////////////////////
 const FALLBACK_MENSAGEM_AI = "Desculpa, estou hospedada em servidor Particular, mas est\u00e1 desligado no momento.";
 const LIMITE_PERGUNTAS_CHAT = 7;
 const MENSAGEM_LIMITE_CHAT = "Voc\u00ea atingiu o limite de sete perguntas. Para continuar, aperte o Reset e fique \u00e0 vontade. Obrigado!";
