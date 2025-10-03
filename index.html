@@ -4,35 +4,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portf&#243;lio profissional de Anderson J Oliveira com gr&#225;fico em tempo real integrado ao n8n.">
+    <meta property="og:title" content="Portf&#243;lio Interativo | Anderson J Oliveira">
+    <meta property="og:description" content="IA pr&#243;pria, gr&#225;ficos em tempo real, players de m&#250;sica e muito mais. Um laborat&#243;rio de criatividade e tecnologia.">
+    <meta property="og:image" content="img/icones1.png">
+    <meta property="og:type" content="website">
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="img/icones1.png" type="image/png">
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/icones1.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2�family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Oswald:wght@200..700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
         rel="stylesheet">
-    <title>Meu portfolio</title>
+    <title>Portf&#243;lio | Anderson J Oliveira</title>
 </head>
 
 <body>
-    <header class="main-header" aria-label="Navegaçao principal">
+    <!-- ====== Header fixo e navegacao ====== -->
+<header class="main-header" aria-label="Navegaçao principal">
         <nav class="main-nav">
             <a class="nav-link nav-link--topo" href="#topo">Topo</a>
             <a class="nav-link nav-link--projetos" href="#projetos">Projetos</a>
             <a class="nav-link nav-link--graficos" href="#graficos">Gráficos</a>
         </nav>
     </header>
+    <!-- ====== Video Background ====== -->
     <div class="caixa-video">
         <video autoplay muted loop playsinline poster="img/icones1.png">
             <source src="./video/trabalho73.mp4" type="video/mp4">
             Seu navegador nao suporta video.
         </video>
     </div>
+    <!-- ====== Video Fallback ====== -->
     <div class="video-fallback" aria-hidden="true"></div>
 
-    <header class="top-bar" id="topo">
+    <!-- ====== Topo com frase efeito, IA e contatos ====== -->
+<header class="top-bar" id="topo">
         <div class="header-main">
             <div class="frase-efeito" aria-live="polite"></div>
+            <!-- ====== Botao e preview do Anderson.AI ====== -->
+<div class="anderson-ai-container">
+                <button id="btnAndersonAI" class="anderson-ai-btn" type="button" aria-haspopup="dialog" aria-controls="andersonAIChat" aria-expanded="false">Anderson.AI</button>
+                <video class="anderson-ai-video" autoplay loop muted playsinline>
+                    <source src="video/Anderson.ai.mp4" type="video/mp4">
+                    Seu navegador n&atilde;o suporta v&iacute;deo em HTML5.
+                </video>
+            </div>
+            <!-- ====== Chat Anderson.AI ====== -->
+<div id="andersonAIChat" class="anderson-ai-chat oculto" role="dialog" aria-labelledby="andersonAIChatTitle" aria-hidden="true">
+                <div class="anderson-ai-chat__content">
+                    <h3 id="andersonAIChatTitle" class="chat-title">Anderson.AI</h3>
+                    <p class="chat-intro">Sou a IA, clone do Anderson. Pergunte algo!</p>
+                    <div id="andersonAIChatMessages" class="chat-history" aria-live="polite"></div>
+                    <form id="andersonAIChatForm" class="chat-form">
+                        <label for="andersonAIChatInput" class="sr-only">Digite sua pergunta</label>
+                        <textarea id="andersonAIChatInput" class="chat-input" name="pergunta" placeholder="Digite sua pergunta..." autocomplete="off" required></textarea>
+                        <div class="chat-actions">
+                            <button type="submit" class="chat-action chat-send anderson-ai-chat__send">Enviar</button>
+                            <button type="button" class="chat-action chat-tts-trigger" id="andersonAITTSButton" aria-label="Ouvir a ultima resposta">&#x1F50A; Ouvir</button>
+                            <button type="button" class="chat-action chat-tts-config" id="andersonAITTSConfig" aria-expanded="false" aria-controls="andersonAITTSMenu" title="Configurar voz">Menu</button>
+                            <button type="button" class="chat-action chat-close anderson-ai-chat__close" id="closeAndersonAIChat" aria-label="Fechar chat">X</button>
+                        </div>
+                    </form>
+                    <div id="andersonAITTSMenu" class="chat-tts-menu oculto" aria-hidden="true">
+                        <div class="chat-tts-row">
+                            <label for="andersonAITTSLang">Idioma</label>
+                            <select id="andersonAITTSLang">
+                                <option value="">Automatico</option>
+                            </select>
+                        </div>
+                        <div class="chat-tts-row">
+                            <label for="andersonAITTSVoice">Voz</label>
+                            <select id="andersonAITTSVoice" disabled>
+                                <option>Carregando...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p id="andersonAIChatStatus" class="chat-status" role="status" aria-live="polite"></p>
+                </div>
+            </div>
 
             <h2 class="titulo-social">
                 <span class="azul">CONTACTS</span>
@@ -64,8 +115,15 @@
         </button>
     </header>
 
-    <main class="container">
-        <section class="hero">
+    <!-- ====== Conteudo Principal ====== -->
+<main class="container">
+                <!-- ====== Secao Hero ====== -->
+<section class="hero">
+            <h1 class="hero-title">
+                <span class="azul">Anderson J Oliveira</span>
+                <span class="verde">Desenvolvedor</span>
+                <span class="amarelo">Full-Stack</span>
+            </h1>
             <div class="icon-group">
                 <img src="img/N8n-logo-new.svg.png" alt="Logo n8n">
                 <img src="img/icones1.png" alt="icones HTML, CSS e JavaScript">
@@ -85,7 +143,8 @@
             </div>
         </section>
 
-        <section class="projetos" id="projetos" aria-labelledby="titulo-projetos">
+                <!-- ====== Secao Projetos ====== -->
+<section class="projetos" id="projetos" aria-labelledby="titulo-projetos">
             <h2 id="titulo-projetos">Meus Projetos</h2>
             <div class="cards">
                 <article class="card">
@@ -119,7 +178,8 @@
             </div>
         </section>
 
-        <section class="skills" aria-labelledby="titulo-skills">
+                <!-- ====== Secao Skills ====== -->
+<section class="skills" aria-labelledby="titulo-skills">
             <h2 id="titulo-skills">Minhas Competencias</h2>
             <div class="badges">
                 <span>HTML</span>
@@ -132,96 +192,50 @@
         </section>
     </main>
 
-    <section class="evolucao" id="graficos" aria-labelledby="titulo-evolucao">
+        <!-- ====== Secao Evolucao (grafico em tempo real) ====== -->
+<section class="evolucao" id="graficos" aria-labelledby="titulo-evolucao">
         <h2 id="titulo-evolucao">&#x1F4C8; Minha evolu&#231;&#227;o em constante aprendizado</h2>
-        <figure class="evolucao-grafico">
-            <svg role="img" aria-describedby="legenda-evolucao" viewBox="0 0 1000 420"
-                preserveAspectRatio="xMidYMid meet">
-                <title id="descricao-grafico">Gr&#225;fico de desempenho em degraus mostrando minha evolu&#231;&#227;o
-                    em diferentes tecnologias ao longo do tempo.</title>
-                <defs>
-                    <linearGradient id="gridGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="rgba(255,255,255,0.08)" />
-                        <stop offset="100%" stop-color="rgba(255,255,255,0.02)" />
-                    </linearGradient>
-                </defs>
-                <rect x="0" y="0" width="1000" height="420" fill="url(#gridGradient)" />
-                <g class="grid">
-                    <line x1="0" y1="360" x2="1000" y2="360" />
-                    <line x1="0" y1="280" x2="1000" y2="280" />
-                    <line x1="0" y1="200" x2="1000" y2="200" />
-                    <line x1="0" y1="120" x2="1000" y2="120" />
-                    <line x1="0" y1="40" x2="1000" y2="40" />
-                    <line x1="120" y1="0" x2="120" y2="420" />
-                    <line x1="260" y1="0" x2="260" y2="420" />
-                    <line x1="400" y1="0" x2="400" y2="420" />
-                    <line x1="540" y1="0" x2="540" y2="420" />
-                    <line x1="680" y1="0" x2="680" y2="420" />
-                    <line x1="820" y1="0" x2="820" y2="420" />
-                </g>
-                <g class="axes">
-                    <line x1="60" y1="380" x2="60" y2="30" />
-                    <line x1="60" y1="380" x2="960" y2="380" />
-                    <text x="30" y="40" class="axis-label">N&#237;vel</text>
-                    <text x="930" y="410" class="axis-label">Tempo</text>
-                    <text x="20" y="360" class="tick">0%</text>
-                    <text x="20" y="280" class="tick">40%</text>
-                    <text x="20" y="200" class="tick">60%</text>
-                    <text x="20" y="120" class="tick">80%</text>
-                    <text x="20" y="50" class="tick">95%</text>
-                </g>
-                <g class="series html">
-                    <path d="M60 340 H160 V280 H260 V240 H360 V210 H480 V190 H600 V180 H720 V170 H840 V165" />
-                </g>
-                <g class="series css">
-                    <path d="M60 350 H140 V300 H240 V250 H340 V220 H460 V205 H580 V195 H700 V188 H820 V182" />
-                </g>
-                <g class="series javascript">
-                    <path d="M60 360 H160 V320 H260 V270 H360 V230 H480 V210 H600 V198 H720 V190 H840 V185" />
-                </g>
-                <g class="series react">
-                    <path d="M60 365 H180 V330 H300 V290 H420 V260 H540 V235 H660 V220 H780 V208 H900 V202" />
-                </g>
-                <g class="series github">
-                    <path d="M60 350 H150 V315 H260 V275 H380 V250 H500 V235 H620 V225 H740 V218 H860 V212" />
-                </g>
-                <g class="series n8n">
-                    <path d="M60 370 H160 V335 H280 V300 H420 V280 H560 V265 H700 V252 H820 V240 H940 V233" />
-                </g>
-                <g class="series automacao">
-                    <path d="M60 360 H200 V320 H340 V285 H480 V260 H620 V240 H760 V225 H880 V215 H960 V210" />
-                </g>
-            </svg>
-            <figcaption class="evolucao-legenda" id="legenda-evolucao">
-                <ul>
-                    <li><span class="dot html"></span>HTML</li>
-                    <li><span class="dot css"></span>CSS</li>
-                    <li><span class="dot javascript"></span>JavaScript</li>
-                    <li><span class="dot react"></span>React</li>
-                    <li><span class="dot github"></span>GitHub</li>
-                    <li><span class="dot n8n"></span>n8n</li>
-                    <li><span class="dot automacao"></span>Automa&#231;&#227;o / IA</li>
+        <figure class="evolucao-grafico" aria-labelledby="titulo-evolucao" aria-describedby="grafico-descricao grafico-legenda grafico-status">
+            <div class="chart-container">
+                <canvas id="graficoEvolucao" role="img" aria-labelledby="titulo-evolucao" aria-describedby="grafico-descricao grafico-legenda">
+                    Seu navegador n&atilde;o suporta o elemento canvas.
+                </canvas>
+            </div>
+            <figcaption id="grafico-descricao">
+                <p>Gr&aacute;fico de linhas exibindo, em tempo real, minha evolu&ccedil;&atilde;o nas principais tecnologias com integra&ccedil;&atilde;o ao n8n.</p>
+                <p>Hospedado em servidor particular; para o n8n rodar, o servi&ccedil;o precisa estar ligado.</p>
+                <ul class="grafico-legenda-list" id="grafico-legenda" aria-label="Tecnologias monitoradas no gr&aacute;fico">
+                    <li><span class="grafico-legenda-dot html" aria-hidden="true"></span><span>HTML</span></li>
+                    <li><span class="grafico-legenda-dot css" aria-hidden="true"></span><span>CSS</span></li>
+                    <li><span class="grafico-legenda-dot javascript" aria-hidden="true"></span><span>JavaScript</span></li>
+                    <li><span class="grafico-legenda-dot react" aria-hidden="true"></span><span>React</span></li>
+                    <li><span class="grafico-legenda-dot n8n" aria-hidden="true"></span><span>n8n</span></li>
+                    <li><span class="grafico-legenda-dot github" aria-hidden="true"></span><span>GitHub</span></li>
                 </ul>
             </figcaption>
         </figure>
     </section>
+    <!-- ====== Mensagem Final ====== -->
     <div class="mensagem-final">
         <p>A tecnologia mudou minha vida para melhor. Hoje n&atilde;o me vejo sem programar, porque cada linha de
             c&oacute;digo me leva mais longe &mdash; e o c&eacute;u n&atilde;o tem limites &#x1F680;&#x1F9E0;.</p>
     </div>
-    <footer id="contato">
+        <!-- ====== Rodape ====== -->
+<footer id="contato">
         <p>&copy; 2025 - Desenvolvido por Anderson J Oliveira </p>
     </footer>
 
+    <!-- ====== Botao de Musicas ====== -->
     <button id="btnMusicas" type="button" aria-controls="playerMusicas" aria-expanded="false">&#x1F3A7; D&#234; o
         play</button>
 
-    <div id="playerMusicas" class="oculto" aria-hidden="true">
+        <!-- ====== Player de musicas ====== -->
+<div id="playerMusicas" class="oculto" aria-hidden="true">
         <h3>&#x1F3A7; Minhas m&uacute;sicas para programar</h3>
 
         <div class="player-item">
             <span class="player-label">M&uacute;sica 1</span>
-            <audio controls preload="none">
+            <audio controls preload="metadata">
                 <source src="musicas/1.mp3" type="audio/mpeg">
                 Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
             </audio>
@@ -229,7 +243,7 @@
 
         <div class="player-item">
             <span class="player-label">M&uacute;sica 2</span>
-            <audio controls preload="none">
+            <audio controls preload="metadata">
                 <source src="musicas/2.mp3" type="audio/mpeg">
                 Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
             </audio>
@@ -237,7 +251,7 @@
 
         <div class="player-item">
             <span class="player-label">M&uacute;sica 3</span>
-            <audio controls preload="none">
+            <audio controls preload="metadata">
                 <source src="musicas/3.mp3" type="audio/mpeg">
                 Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
             </audio>
@@ -245,16 +259,30 @@
 
         <div class="player-item">
             <span class="player-label">M&uacute;sica 4</span>
-            <audio controls preload="none">
+            <audio controls preload="metadata">
                 <source src="musicas/4.mp3" type="audio/mpeg">
                 Seu navegador n&atilde;o suporta o elemento &lt;audio&gt;.
             </audio>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js" crossorigin="anonymous"></script>
     <script src="script.js"></script>
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
