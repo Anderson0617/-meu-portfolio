@@ -1,4 +1,4 @@
-// ====== Referencias de elementos ======
+﻿// ====== Referencias de elementos ======
 const btnSobre = document.getElementById("btnSobre");
 const caixaSobre = document.getElementById("caixaSobre");
 const toggleTema = document.getElementById("toggleTema");
@@ -122,7 +122,7 @@ const andersonAIChatForm = document.getElementById("andersonAIChatForm");
 const andersonAIChatInput = document.getElementById("andersonAIChatInput");
 const andersonAIChatMessages = document.getElementById("andersonAIChatMessages");
 const andersonAIChatStatus = document.getElementById("andersonAIChatStatus");
-const N8N_AI_ENDPOINT = "[{name/webhook/anderson-ai";/////////////////////////
+const N8N_AI_ENDPOINT = "https://unexhaustively-extendible-jeni.ngrok-free.dev/webhook/anderson-ai";/////////////////////////
 const FALLBACK_MENSAGEM_AI = "Desculpa, estou hospedada em servidor Particular, mas est\u00e1 desligado no momento.";
 const LIMITE_PERGUNTAS_CHAT = 7;
 const MENSAGEM_LIMITE_CHAT = "Voc\u00ea atingiu o limite de sete perguntas. Para continuar, aperte o Reset e fique \u00e0 vontade. Obrigado!";
@@ -1246,9 +1246,9 @@ if (graficoCanvas) {
 
                     if (Object.keys(limitesDetectados).length) {
                         aplicarLimites(limitesDetectados);
-                        atualizarStatusGrafico(`Dados do n8n às ${horarioConsulta}: ${montarResumoLimites()}.`);
+                        atualizarStatusGrafico(`Dados do n8n Ã s ${horarioConsulta}: ${montarResumoLimites()}.`);
                     } else {
-                        atualizarStatusGrafico(`n8n sem novos dados às ${horarioConsulta}. Limites atuais: ${montarResumoLimites()}.`);
+                        atualizarStatusGrafico(`n8n sem novos dados Ã s ${horarioConsulta}. Limites atuais: ${montarResumoLimites()}.`);
                     }
 
                     reiniciarCiclo();
@@ -1279,6 +1279,7 @@ if (graficoCanvas) {
         });
     }
 }
+
 
 
 
