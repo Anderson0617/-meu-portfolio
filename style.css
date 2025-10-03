@@ -31,6 +31,7 @@ html { scroll-behavior: smooth; }
     background: rgba(15, 22, 35, 0.72);
     border-bottom: 1px solid var(--glass-border);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+    -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
 }
 
@@ -254,6 +255,7 @@ body {
 .toggle-tema {
     border: 1px solid var(--glass-border);
     background: rgba(255, 255, 255, 0.15);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     color: var(--body-color);
     border-radius: 999px;
@@ -294,6 +296,7 @@ body {
 
 .social-nav {
     background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
     border-radius: 18px;
     padding: 12px 24px;
@@ -466,6 +469,7 @@ body.dark-mode .caixa-sobre {
 
 /* ====== Cards de projetos ====== */
 .projetos,
+.demo-video,
 /* ====== SeÃƒÂ§ÃƒÂ£o Skills ====== */
 .skills {
     background: var(--glass-bg);
@@ -477,10 +481,37 @@ body.dark-mode .caixa-sobre {
 }
 
 .projetos h2,
+.demo-video h2,
 .skills h2 {
     text-align: center;
     margin-bottom: 24px;
     font-size: clamp(1.5rem, 1.2vw + 1.2rem, 2.3rem);
+}
+
+.demo-video video {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    margin: 0 auto 16px;
+    display: block;
+    box-shadow: var(--box-shadow);
+}
+
+.demo-video__links {
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.demo-video__links a {
+    color: var(--accent-blue);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.demo-video__links a:hover,
+.demo-video__links a:focus-visible {
+    text-decoration: underline;
 }
 
 .cards {
@@ -558,6 +589,7 @@ body.dark-mode .caixa-sobre {
     border-radius: 24px;
     border: 1px solid var(--glass-border);
     box-shadow: var(--box-shadow);
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 
@@ -1288,6 +1320,8 @@ body.dark-mode .chat-status {
         box-sizing: border-box;
     }
 }
+
+
 
 
 

@@ -793,7 +793,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
 const graficoCanvas = document.getElementById("graficoEvolucao");
 const graficoStatus = document.getElementById("graficoStatus");
 const graficoLegenda = document.getElementById("grafico-legenda");
-const N8N_ENDPOINT = "http://0.0.0.0:5678/webhook/grafico-evolucao";////////////////////////////////////////////////////
+const N8N_ENDPOINT = "http://localhost:5678/webhook/grafico-evolucao";////////////////////////////////////////////////////
 const LIMITE_EXIBICAO = 100;
 const INTERVALO_CONSULTA = 15000;
 const LIMITE_SINCRONIA = 60;
