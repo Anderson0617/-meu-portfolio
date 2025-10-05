@@ -352,6 +352,54 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     let ultimaVozSelecionada = "";
     let ttsEmExecucao = false;
 
+    const MAX_TTS_TENTATIVAS = 3;
+    const TTS_INTERVALO_APOS_CANCELAR = 80;
+
+    const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const normalizarTextoParaFala = (texto) => texto.replace(/\s+/g, " ").replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+
+    const selecionarVozParaTentativa = (voices, tentativaAtual) => {
+        const lista = Array.isArray(voices) ? voices : Array.from(voices || []);
+        if (!lista.length) {
+            return null;
+        }
+
+        if (tentativaAtual === 1 && ttsVoiceSelect && !ttsVoiceSelect.disabled && ttsVoiceSelect.value) {
+            const preferida = lista.find((voz) => voz.voiceURI === ttsVoiceSelect.value);
+            if (preferida) {
+                return preferida;
+            }
+        }
+
+        const candidatos = [];
+        const idiomaSelecionado = ttsLangSelect && ttsLangSelect.value ? ttsLangSelect.value : "";
+        const idiomaNavegador = navigator.language || "";
+
+        if (idiomaSelecionado) {
+            candidatos.push((voz) => voz.lang === idiomaSelecionado && voz.localService);
+            candidatos.push((voz) => voz.lang === idiomaSelecionado);
+        }
+        if (idiomaNavegador) {
+            candidatos.push((voz) => voz.lang === idiomaNavegador && voz.localService);
+            candidatos.push((voz) => voz.lang === idiomaNavegador);
+        }
+
+        candidatos.push((voz) => voz.lang && voz.lang.startsWith("pt") && voz.localService);
+        candidatos.push((voz) => voz.lang && voz.lang.startsWith("pt"));
+        candidatos.push((voz) => voz.default);
+        candidatos.push((voz) => voz.localService);
+
+        for (const criterio of candidatos) {
+            const encontrada = lista.find(criterio);
+            if (encontrada) {
+                return encontrada;
+            }
+        }
+
+        return lista[0];
+    };
+
     const atualizarRotuloVelocidade = () => {
         if (ttsRateInput && ttsRateValue) {
             const valor = Number(ttsRateInput.value || 1).toFixed(1);
@@ -463,6 +511,35 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         const idiomaAtual = ttsLangSelect ? ttsLangSelect.value : "";
         popularVozes(vozesDisponiveis, idiomaAtual);
     };
+    const garantirVozesCarregadas = async () => {
+        if (!speechDisponivel) {
+            return [];
+        }
+
+        if (vozesDisponiveis.length) {
+            return vozesDisponiveis;
+        }
+
+        const tentativasMaximas = 5;
+        for (let tentativa = 0; tentativa < tentativasMaximas; tentativa += 1) {
+            carregarVozes();
+            if (vozesDisponiveis.length) {
+                return vozesDisponiveis;
+            }
+            await esperar(200);
+        }
+
+        const vozes = window.speechSynthesis.getVoices().filter((voz) => voz.lang);
+        if (vozes.length) {
+            vozesDisponiveis = vozes.sort((a, b) => a.name.localeCompare(b.name));
+            popularIdiomas(vozesDisponiveis);
+            const idiomaAtual = ttsLangSelect ? ttsLangSelect.value : "";
+            popularVozes(vozesDisponiveis, idiomaAtual);
+        }
+
+        return vozesDisponiveis;
+    };
+
 
     const atualizarIdiomaPadrao = () => {
         if (!speechDisponivel || !ttsLangSelect) {
@@ -488,7 +565,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         }
     };
 
-    const falarUltimaResposta = () => {
+    const falarUltimaResposta = async (tentativaAtual = 1) => {
         if (!speechDisponivel) {
             if (andersonAIChatStatus) {
                 andersonAIChatStatus.textContent = "Leitura por voz nao suportada neste navegador.";
@@ -496,53 +573,95 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             return;
         }
 
-        const texto = ultimaRespostaFalada.trim();
-        if (!texto) {
+        const textoNormalizado = normalizarTextoParaFala(ultimaRespostaFalada);
+        if (!textoNormalizado) {
             if (andersonAIChatStatus) {
                 andersonAIChatStatus.textContent = "Ainda nao tenho nenhuma resposta para ler.";
             }
             return;
         }
 
-        const utterance = new SpeechSynthesisUtterance(texto);
+        const voices = await garantirVozesCarregadas();
+        const listaVozes = Array.isArray(voices) ? voices : Array.from(voices || []);
+        if (!listaVozes.length) {
+            if (andersonAIChatStatus) {
+                andersonAIChatStatus.textContent = "Nenhuma voz sintetica disponivel neste navegador.";
+            }
+            return;
+        }
+
+        const vozSelecionada = selecionarVozParaTentativa(listaVozes, tentativaAtual);
+
+        const utterance = new SpeechSynthesisUtterance(textoNormalizado);
         if (ttsRateInput) {
             utterance.rate = Number(ttsRateInput.value) || 1;
         }
 
-        if (ttsVoiceSelect && !ttsVoiceSelect.disabled && ttsVoiceSelect.value) {
-            const voz = vozesDisponiveis.find((item) => item.voiceURI === ttsVoiceSelect.value);
-            if (voz) {
-                utterance.voice = voz;
-                utterance.lang = voz.lang;
+        if (vozSelecionada) {
+            utterance.voice = vozSelecionada;
+            if (vozSelecionada.lang) {
+                utterance.lang = vozSelecionada.lang;
+            }
+            ultimaVozSelecionada = vozSelecionada.voiceURI;
+            if (ttsVoiceSelect && !ttsVoiceSelect.disabled) {
+                ttsVoiceSelect.value = vozSelecionada.voiceURI;
             }
         } else if (ttsLangSelect && ttsLangSelect.value) {
             utterance.lang = ttsLangSelect.value;
+        } else if (navigator.language) {
+            utterance.lang = navigator.language;
         }
 
         utterance.onend = () => {
             ttsEmExecucao = false;
             atualizarEstadoBotaoTTS();
-            if (andersonAIChatStatus && andersonAIChatStatus.textContent === "Lendo resposta...") {
-                andersonAIChatStatus.textContent = "";
+            if (andersonAIChatStatus) {
+                const statusAtual = andersonAIChatStatus.textContent;
+                if (statusAtual === "Lendo resposta..." || statusAtual === "Ajustando voz... tentando novamente." || statusAtual === "Nao consegui usar esta voz, tentando outra...") {
+                    andersonAIChatStatus.textContent = "";
+                }
             }
         };
 
-        utterance.onerror = () => {
+        utterance.onerror = (evento) => {
             ttsEmExecucao = false;
             atualizarEstadoBotaoTTS();
             window.speechSynthesis.cancel();
+            const codigoErro = evento && evento.error ? evento.error : "";
+            if (tentativaAtual < MAX_TTS_TENTATIVAS && (codigoErro === "synthesis-failed" || codigoErro === "audio-busy" || codigoErro === "interrupted")) {
+                console.warn("[Anderson.AI][TTS] Falha na tentativa " + tentativaAtual + " (" + codigoErro + "). Tentando outra voz.", evento);
+                if (andersonAIChatStatus) {
+                    andersonAIChatStatus.textContent = "Nao consegui usar esta voz, tentando outra...";
+                }
+                window.setTimeout(() => {
+                    falarUltimaResposta(tentativaAtual + 1).catch((erroFallback) => {
+                        console.error("[Anderson.AI][TTS] Falha ao tentar fallback de voz:", erroFallback);
+                    });
+                }, 160);
+                return;
+            }
             if (andersonAIChatStatus) {
-                andersonAIChatStatus.textContent = "Nao foi possivel sintetizar a voz.";
+                const detalheErro = codigoErro ? " (" + codigoErro + ")" : "";
+                andersonAIChatStatus.textContent = "Nao foi possivel sintetizar a voz" + detalheErro + ".";
             }
         };
 
         if (andersonAIChatStatus) {
-            andersonAIChatStatus.textContent = "Lendo resposta...";
+            andersonAIChatStatus.textContent = tentativaAtual === 1 ? "Lendo resposta..." : "Ajustando voz... tentando novamente.";
         }
         ttsEmExecucao = true;
         atualizarEstadoBotaoTTS();
-        window.speechSynthesis.cancel();
+
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending || window.speechSynthesis.paused) {
+            window.speechSynthesis.cancel();
+            await esperar(TTS_INTERVALO_APOS_CANCELAR);
+        }
+
         window.speechSynthesis.speak(utterance);
+
+        if (typeof window.speechSynthesis.resume === "function" && window.speechSynthesis.paused) {
+            window.speechSynthesis.resume();
+        }
     };
 
     fecharMenuTTS = () => {
@@ -666,7 +785,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 ttsConfigButton.disabled = true;
             }
         } else {
-            ttsButton.addEventListener("click", () => {
+            ttsButton.addEventListener("click", async () => {
                 if (ttsEmExecucao || window.speechSynthesis.speaking) {
                     interromperLeitura("Leitura interrompida.");
                     return;
@@ -674,7 +793,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 if (ttsMenu && !ttsMenu.classList.contains("oculto")) {
                     fecharMenuTTS();
                 }
-                falarUltimaResposta();
+                await falarUltimaResposta();
             });
         }
     }
@@ -739,7 +858,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 andersonAIChatStatus.textContent = "";
             }
         });
-    }    if (andersonAIChatForm) {
+    } if (andersonAIChatForm) {
         andersonAIChatForm.addEventListener("submit", async (evento) => {
             evento.preventDefault();
 
@@ -1225,8 +1344,11 @@ if (graficoCanvas) {
                     const resposta = await fetch(N8N_ENDPOINT, {
                         method: "GET",
                         headers: {
-                            Accept: "application/json"
+                            Accept: "application/json",
+                            "Cache-Control": "no-cache",
+                            "ngrok-skip-browser-warning": "true"
                         },
+                        mode: "cors",
                         cache: "no-store"
                     });
 
@@ -1241,14 +1363,27 @@ if (graficoCanvas) {
                         carga = await resposta.text();
                     }
 
+                    if (typeof carga === "string") {
+                        const textoNormalizado = carga.trim();
+                        if (textoNormalizado.startsWith("{") || textoNormalizado.startsWith("[")) {
+                            try {
+                                carga = JSON.parse(textoNormalizado);
+                            } catch (erroParseTexto) {
+                                console.warn("[Grafico] Nao foi possivel converter texto em JSON valido:", erroParseTexto);
+                            }
+                        } else if (/<!DOCTYPE html>/i.test(textoNormalizado) || /<html/i.test(textoNormalizado)) {
+                            console.warn("[Grafico] Resposta do webhook parece HTML. Verifique o cabecalho ngrok-skip-browser-warning no n8n.");
+                        }
+                    }
+
                     const limitesDetectados = extrairLimitesDaCarga(carga);
                     const horarioConsulta = formatarHorario();
 
                     if (Object.keys(limitesDetectados).length) {
                         aplicarLimites(limitesDetectados);
-                        atualizarStatusGrafico(`Dados do n8n Ã s ${horarioConsulta}: ${montarResumoLimites()}.`);
+                        atualizarStatusGrafico(`Dados do n8n as ${horarioConsulta}: ${montarResumoLimites()}.`);
                     } else {
-                        atualizarStatusGrafico(`n8n sem novos dados Ã s ${horarioConsulta}. Limites atuais: ${montarResumoLimites()}.`);
+                        atualizarStatusGrafico(`n8n sem novos dados as ${horarioConsulta}. Limites atuais: ${montarResumoLimites()}.`);
                     }
 
                     reiniciarCiclo();
@@ -1279,13 +1414,6 @@ if (graficoCanvas) {
         });
     }
 }
-
-
-
-
-
-
-
 
 
 
