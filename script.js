@@ -122,7 +122,7 @@ const andersonAIChatForm = document.getElementById("andersonAIChatForm");
 const andersonAIChatInput = document.getElementById("andersonAIChatInput");
 const andersonAIChatMessages = document.getElementById("andersonAIChatMessages");
 const andersonAIChatStatus = document.getElementById("andersonAIChatStatus");
-const N8N_AI_ENDPOINT = "https://unexhaustively-extendible-jeni.ngrok-free.dev/webhook/anderson-ai";/////////////////////////////
+const N8N_AI_ENDPOINT = "https://unexhaustively-extendible-jeni.ngrok-free.dev/webhook/anderson-ai";// <= Atualize A cada 30 minutos via ngrok-free.dev
 const FALLBACK_MENSAGEM_AI = "Desculpa, estou hospedada em servidor Particular, mas est\u00e1 desligado no momento.";
 const LIMITE_PERGUNTAS_CHAT = 7;
 const MENSAGEM_LIMITE_CHAT = "Voc\u00ea atingiu o limite de sete perguntas. Para continuar, aperte o Reset e fique \u00e0 vontade. Obrigado!";
@@ -912,7 +912,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
 const graficoCanvas = document.getElementById("graficoEvolucao");
 const graficoStatus = document.getElementById("graficoStatus");
 const graficoLegenda = document.getElementById("grafico-legenda");
-const N8N_ENDPOINT = "https://unexhaustively-extendible-jeni.ngrok-free.dev/webhook/grafico-evolucao";////////////////////////////////////////////////////
+const N8N_ENDPOINT = "https://unexhaustively-extendible-jeni.ngrok-free.dev/webhook/grafico-evolucao";// <= Atualize A cada 30 minutos via ngrok-free.dev
 const LIMITE_EXIBICAO = 100;
 const INTERVALO_CONSULTA = 15000;
 const LIMITE_SINCRONIA = 60;
@@ -1414,6 +1414,7 @@ if (graficoCanvas) {
         });
     }
 }
+
 
 
 
