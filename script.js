@@ -1,4 +1,5 @@
-﻿// ====== Referencias de elementos ======
+﻿
+// ====== Referencias de elementos ======
 const btnSobre = document.getElementById("btnSobre");
 const caixaSobre = document.getElementById("caixaSobre");
 const toggleTema = document.getElementById("toggleTema");
@@ -1414,17 +1415,3 @@ if (graficoCanvas) {
         });
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
