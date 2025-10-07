@@ -457,7 +457,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     let ttsInicializado = false;
 
     const MAX_TTS_TENTATIVAS = 3;
-    const TTS_INTERVALO_APOS_CANCELAR = 80;
+    const TTS_INTERVALO_APOS_CANCELAR = 140;
     const IDIOMA_PADRAO_TTS = "pt-BR";
 
     if (ttsLangSelect && !ttsLangSelect.dataset.preferredLang) {
@@ -774,6 +774,8 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         const vozSelecionada = selecionarVozParaTentativa(listaVozes, tentativaAtual);
 
         const utterance = new SpeechSynthesisUtterance(textoNormalizado);
+        utterance.volume = 1;
+        utterance.pitch = 1;
         if (ttsRateInput) {
             utterance.rate = Number(ttsRateInput.value) || 1;
         }
@@ -848,10 +850,24 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             await esperar(TTS_INTERVALO_APOS_CANCELAR);
         }
 
-        window.speechSynthesis.speak(utterance);
+        const iniciarFala = () => {
+            try {
+                window.speechSynthesis.speak(utterance);
+                if (typeof window.speechSynthesis.resume === "function" && window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                }
+            } catch (erroSpeak) {
+                console.error("[Anderson.AI][TTS] Falha ao chamar speak:", erroSpeak);
+                if (andersonAIChatStatus) {
+                    andersonAIChatStatus.textContent = "Nao consegui iniciar a leitura de voz.";
+                }
+            }
+        };
 
-        if (typeof window.speechSynthesis.resume === "function" && window.speechSynthesis.paused) {
-            window.speechSynthesis.resume();
+        if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "")) {
+            window.setTimeout(iniciarFala, 0);
+        } else {
+            iniciarFala();
         }
     };
 
@@ -993,10 +1009,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 ttsConfigButton.disabled = true;
             }
         } else {
-            ttsButton.addEventListener("click", async () => {
-                await inicializarTTSSeNecessario().catch((erro) => {
-                    console.warn("[Anderson.AI][TTS] Falha ao preparar TTS:", erro);
-                });
+            const acionarLeitura = () => {
                 if (ttsEmExecucao || window.speechSynthesis.speaking) {
                     interromperLeitura("Leitura interrompida.");
                     return;
@@ -1004,7 +1017,24 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 if (ttsMenu && !ttsMenu.classList.contains("oculto")) {
                     fecharMenuTTS();
                 }
-                await falarUltimaResposta();
+                falarUltimaResposta().catch((erro) => {
+                    console.error("[Anderson.AI][TTS] Falha ao iniciar leitura:", erro);
+                    if (andersonAIChatStatus) {
+                        andersonAIChatStatus.textContent = "Nao consegui iniciar a leitura de voz.";
+                    }
+                });
+            };
+
+            ttsButton.addEventListener("click", () => {
+                const preparacao = inicializarTTSSeNecessario();
+                if (preparacao && typeof preparacao.then === "function") {
+                    preparacao.then(acionarLeitura).catch((erro) => {
+                        console.warn("[Anderson.AI][TTS] Falha ao preparar TTS:", erro);
+                        acionarLeitura();
+                    });
+                } else {
+                    acionarLeitura();
+                }
             });
         }
     }
@@ -1052,6 +1082,11 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         btnAndersonAI.addEventListener("click", () => {
             const deveAbrir = andersonAIChat.classList.contains("oculto");
             toggleAndersonAIChat(deveAbrir);
+            if (speechDisponivel) {
+                inicializarTTSSeNecessario().catch((erro) => {
+                    console.warn("[Anderson.AI][TTS] Falha ao preparar TTS ao abrir o chat:", erro);
+                });
+            }
         });
     }
 
