@@ -176,7 +176,7 @@ body {
     background-color: #000000;
     position: relative;
     overflow-x: hidden;
-    padding: calc(40px + var(--header-height)) 24px 80px;
+    padding: calc(var(--header-height) + 12px) 24px 80px;
     transition: background 0.3s ease, color 0.3s ease;
 }
 
@@ -228,7 +228,7 @@ body::before {
     z-index: -3;
 }
 
-body > *:not(.caixa-video):not(.video-fallback):not(.main-header) {
+body > *:not(.caixa-video):not(.video-fallback):not(.main-header):not(.rastro) {
     position: relative;
     z-index: 1;
 }
@@ -1363,12 +1363,12 @@ body.dark-mode .chat-status {
 }
 
 .top-bar {
-    margin-top: calc(var(--header-height) + 12px);
+    margin-top: 16px;
 }
 
 @media (max-width: 768px) {
     .top-bar {
-        margin-top: calc(var(--header-height) + 20px);
+        margin-top: 20px;
     }
 }
 
