@@ -459,6 +459,9 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     const MAX_TTS_TENTATIVAS = 3;
     const TTS_INTERVALO_APOS_CANCELAR = 140;
     const IDIOMA_PADRAO_TTS = "pt-BR";
+    const isIOS = /iP(hone|od|ad)/i.test(navigator.userAgent || "") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "");
+    const DETECTOR_FALA_TIMEOUT = isMobile ? 4000 : 1500;
 
     if (ttsLangSelect && !ttsLangSelect.dataset.preferredLang) {
         ttsLangSelect.dataset.preferredLang = IDIOMA_PADRAO_TTS;
@@ -780,7 +783,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             utterance.rate = Number(ttsRateInput.value) || 1;
         }
 
-        if (vozSelecionada) {
+        if (!isIOS && vozSelecionada) {
             utterance.voice = vozSelecionada;
             if (vozSelecionada.lang) {
                 utterance.lang = vozSelecionada.lang;
@@ -789,13 +792,18 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             if (ttsVoiceSelect && !ttsVoiceSelect.disabled) {
                 ttsVoiceSelect.value = vozSelecionada.voiceURI;
             }
-        } else if (ttsLangSelect) {
-            const idiomaPreferido = ttsLangSelect.value || ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS;
-            if (idiomaPreferido) {
-                utterance.lang = idiomaPreferido;
+        }
+
+        if (!utterance.lang) {
+            if (ttsLangSelect) {
+                const idiomaPreferido = ttsLangSelect.value || ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS;
+                if (idiomaPreferido) {
+                    utterance.lang = idiomaPreferido;
+                }
             }
-        } else if (navigator.language) {
-            utterance.lang = navigator.language;
+            if (!utterance.lang && navigator.language) {
+                utterance.lang = navigator.language;
+            }
         }
 
         let verificadorFala = null;
@@ -876,10 +884,12 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         };
 
         if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "")) {
-            window.setTimeout(iniciarFala, 0);
-        } else {
-            iniciarFala();
-        }
+        window.speechSynthesis.cancel();
+        window.setTimeout(iniciarFala, 0);
+    } else {
+        window.speechSynthesis.cancel();
+        iniciarFala();
+    }
 
         verificadorFala = window.setTimeout(() => {
             if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
@@ -897,7 +907,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                     andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
                 }
             }
-        }, 1200);
+        }, DETECTOR_FALA_TIMEOUT);
     };
 
     fecharMenuTTS = () => {
