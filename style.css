@@ -188,6 +188,8 @@ body {
     object-fit: cover;
     filter: var(--video-filter);
     background-color: var(--video-bg-solid);
+    opacity: 1;
+    transition: opacity 0.8s ease;
 }
 
 .video-fallback {
@@ -1410,24 +1412,33 @@ body.dark-mode .chat-status {
 
 .caixa-video__video--mobile {
     display: none;
+    opacity: 0;
 }
 
 @media (max-width: 768px) {
     .caixa-video {
         display: flex;
         flex-direction: column;
+        gap: 12px;
     }
 
     .caixa-video__video--desktop {
-        display: none;
+        display: block;
+        opacity: 1;
+        flex: 1 0 auto;
+        height: calc(33.333vh - 8px);
     }
 
     .caixa-video__video--mobile {
         display: block;
         flex: 1 0 auto;
-        height: 33.334vh;
+        height: calc(33.333vh - 8px);
     }
 }
+
+
+
+
 
 
 

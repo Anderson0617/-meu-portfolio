@@ -1863,3 +1863,121 @@ if (graficoCanvas) {
 
 
 
+
+const videoDelayTimers = new Map();
+
+const ajustarVideosDeFundo = () => {
+    const largura = window.innerWidth || document.documentElement.clientWidth;
+    const videos = Array.from(document.querySelectorAll(".caixa-video__video"));
+
+    videos.forEach((video) => {
+        if (videoDelayTimers.has(video)) {
+            clearTimeout(videoDelayTimers.get(video));
+            videoDelayTimers.delete(video);
+        }
+
+        const estilos = window.getComputedStyle(video);
+        const visivel = estilos.display !== "none" && estilos.visibility !== "hidden";
+        const delaySegundos = Number(video.dataset.delay || 0);
+        const offsetSegundos = Number(video.dataset.offset || 0);
+
+        const aplicarOffset = () => {
+            if (offsetSegundos > 0 && video.duration && isFinite(video.duration)) {
+                const normalizado = offsetSegundos % video.duration;
+                if (!Number.isNaN(normalizado)) {
+                    try {
+                        video.currentTime = normalizado;
+                    } catch (erroOffset) {
+                        console.warn("[Background Video] Nao foi possivel ajustar offset:", erroOffset);
+                    }
+                }
+            } else if (offsetSegundos <= 0) {
+                try {
+                    video.currentTime = 0;
+                } catch (erroReset) {
+                    console.warn("[Background Video] Falha ao reiniciar video:", erroReset);
+                }
+            }
+        };
+
+        const removerLoopHandler = () => {
+            if (video._backgroundLoopHandler) {
+                video.removeEventListener("ended", video._backgroundLoopHandler);
+                delete video._backgroundLoopHandler;
+            }
+        };
+
+        const garantirLoopHandler = () => {
+            if (video._backgroundLoopHandler) {
+                return;
+            }
+            const handler = () => {
+                const larguraAtual = window.innerWidth || document.documentElement.clientWidth;
+                if (larguraAtual <= 768) {
+                    aplicarOffset();
+                    const promessaReexec = video.play();
+                    if (promessaReexec && typeof promessaReexec.then === "function") {
+                        promessaReexec.catch(() => {});
+                    }
+                }
+            };
+            video._backgroundLoopHandler = handler;
+            video.addEventListener("ended", handler);
+        };
+
+        const iniciarVideo = () => {
+            aplicarOffset();
+            video.style.opacity = 1;
+            const promessa = video.play();
+            if (promessa && typeof promessa.then === "function") {
+                promessa.catch((erroPlay) => {
+                    console.warn("[Background Video] Falha ao reproduzir video:", erroPlay);
+                });
+            }
+        };
+
+        const prepararReproducao = () => {
+            if (video.readyState >= 1 && video.duration && isFinite(video.duration)) {
+                iniciarVideo();
+            } else {
+                video.addEventListener("loadedmetadata", iniciarVideo, { once: true });
+            }
+        };
+
+        if (visivel && largura <= 768) {
+            video.pause();
+            video.style.opacity = 0;
+            garantirLoopHandler();
+            aplicarOffset();
+            if (delaySegundos <= 0) {
+                prepararReproducao();
+            } else {
+                const temporizador = window.setTimeout(() => {
+                    prepararReproducao();
+                    videoDelayTimers.delete(video);
+                }, delaySegundos * 1000);
+                videoDelayTimers.set(video, temporizador);
+            }
+        } else if (visivel) {
+            video.pause();
+            video.style.opacity = 1;
+            removerLoopHandler();
+            aplicarOffset();
+            const promessa = video.play();
+            if (promessa && typeof promessa.then === "function") {
+                promessa.catch((erroPlay) => {
+                    console.warn("[Background Video] Falha ao reproduzir video (desktop):", erroPlay);
+                });
+            }
+        } else {
+            video.pause();
+            video.style.opacity = 0;
+            removerLoopHandler();
+        }
+    });
+};
+
+document.addEventListener("DOMContentLoaded", ajustarVideosDeFundo);
+window.addEventListener("resize", ajustarVideosDeFundo);
+window.addEventListener("orientationchange", ajustarVideosDeFundo);
+ajustarVideosDeFundo();
