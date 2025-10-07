@@ -884,30 +884,36 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         };
 
         if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "")) {
-        window.speechSynthesis.cancel();
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            window.speechSynthesis.cancel();
+        }
         window.setTimeout(iniciarFala, 0);
     } else {
-        window.speechSynthesis.cancel();
+        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            window.speechSynthesis.cancel();
+        }
         iniciarFala();
     }
 
-        verificadorFala = window.setTimeout(() => {
-            if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
-                limparEstadoFala();
-                ttsEmExecucao = false;
-                if (tentativaAtual < MAX_TTS_TENTATIVAS) {
-                    window.speechSynthesis.cancel();
-                    falarUltimaResposta(tentativaAtual + 1).catch((erroFallback) => {
-                        console.error("[Anderson.AI][TTS] Falha no fallback de voz:", erroFallback);
-                        if (andersonAIChatStatus) {
-                            andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
-                        }
-                    });
-                } else if (andersonAIChatStatus) {
-                    andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
+        if (!isIOS) {
+            verificadorFala = window.setTimeout(() => {
+                if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+                    limparEstadoFala();
+                    ttsEmExecucao = false;
+                    if (tentativaAtual < MAX_TTS_TENTATIVAS) {
+                        window.speechSynthesis.cancel();
+                        falarUltimaResposta(tentativaAtual + 1).catch((erroFallback) => {
+                            console.error("[Anderson.AI][TTS] Falha no fallback de voz:", erroFallback);
+                            if (andersonAIChatStatus) {
+                                andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
+                            }
+                        });
+                    } else if (andersonAIChatStatus) {
+                        andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
+                    }
                 }
-            }
-        }, DETECTOR_FALA_TIMEOUT);
+            }, DETECTOR_FALA_TIMEOUT);
+        }
     };
 
     fecharMenuTTS = () => {
