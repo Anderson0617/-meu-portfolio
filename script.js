@@ -798,7 +798,17 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             utterance.lang = navigator.language;
         }
 
+        let verificadorFala = null;
+
+        const limparEstadoFala = () => {
+            if (verificadorFala) {
+                clearTimeout(verificadorFala);
+                verificadorFala = null;
+            }
+        };
+
         utterance.onend = () => {
+            limparEstadoFala();
             cancelamentoSolicitado = false;
             ttsEmExecucao = false;
             atualizarEstadoBotaoTTS();
@@ -811,6 +821,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         };
 
         utterance.onerror = (evento) => {
+            limparEstadoFala();
             ttsEmExecucao = false;
             atualizarEstadoBotaoTTS();
             window.speechSynthesis.cancel();
@@ -869,6 +880,24 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         } else {
             iniciarFala();
         }
+
+        verificadorFala = window.setTimeout(() => {
+            if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+                limparEstadoFala();
+                ttsEmExecucao = false;
+                if (tentativaAtual < MAX_TTS_TENTATIVAS) {
+                    window.speechSynthesis.cancel();
+                    falarUltimaResposta(tentativaAtual + 1).catch((erroFallback) => {
+                        console.error("[Anderson.AI][TTS] Falha no fallback de voz:", erroFallback);
+                        if (andersonAIChatStatus) {
+                            andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
+                        }
+                    });
+                } else if (andersonAIChatStatus) {
+                    andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
+                }
+            }
+        }, 1200);
     };
 
     fecharMenuTTS = () => {
@@ -1026,15 +1055,10 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             };
 
             ttsButton.addEventListener("click", () => {
-                const preparacao = inicializarTTSSeNecessario();
-                if (preparacao && typeof preparacao.then === "function") {
-                    preparacao.then(acionarLeitura).catch((erro) => {
-                        console.warn("[Anderson.AI][TTS] Falha ao preparar TTS:", erro);
-                        acionarLeitura();
-                    });
-                } else {
-                    acionarLeitura();
-                }
+                inicializarTTSSeNecessario().catch((erro) => {
+                    console.warn("[Anderson.AI][TTS] Falha ao preparar TTS:", erro);
+                });
+                acionarLeitura();
             });
         }
     }
