@@ -162,7 +162,8 @@ body.dark-mode {
 body {
     min-height: 100vh;
     color: var(--body-color);
-    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 60%);
+    background-color: #00f5ff;
+    background-image: radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 60%);
     overflow-x: hidden;
     padding: calc(40px + var(--header-height)) 24px 80px;
     transition: background 0.3s ease, color 0.3s ease;

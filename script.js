@@ -1931,6 +1931,10 @@ const ajustarVideosDeFundo = () => {
             const promessa = video.play();
             if (promessa && typeof promessa.then === "function") {
                 promessa.catch((erroPlay) => {
+                    if (erroPlay && erroPlay.name === "AbortError") {
+                        // Reproduzir e pausar em sequencia gera AbortError; ignoramos para evitar ruido no console.
+                        return;
+                    }
                     console.warn("[Background Video] Falha ao reproduzir video:", erroPlay);
                 });
             }
@@ -1966,6 +1970,9 @@ const ajustarVideosDeFundo = () => {
             const promessa = video.play();
             if (promessa && typeof promessa.then === "function") {
                 promessa.catch((erroPlay) => {
+                    if (erroPlay && erroPlay.name === "AbortError") {
+                        return;
+                    }
                     console.warn("[Background Video] Falha ao reproduzir video (desktop):", erroPlay);
                 });
             }
