@@ -454,6 +454,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     let ultimaVozSelecionada = "";
     let ttsEmExecucao = false;
     let cancelamentoSolicitado = false;
+    let ttsInicializado = false;
 
     const MAX_TTS_TENTATIVAS = 3;
     const TTS_INTERVALO_APOS_CANCELAR = 80;
@@ -546,6 +547,43 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             }
         }
         return codigo;
+    };
+
+    const inicializarTTSSeNecessario = async () => {
+        if (!speechDisponivel || ttsInicializado) {
+            return;
+        }
+        try {
+            await new Promise((resolve) => {
+                let finalizado = false;
+                const finalizar = () => {
+                    if (finalizado) {
+                        return;
+                    }
+                    finalizado = true;
+                    resolve();
+                };
+                const desbloqueio = new SpeechSynthesisUtterance(" ");
+                desbloqueio.volume = 0;
+                desbloqueio.rate = 1;
+                desbloqueio.pitch = 1;
+                desbloqueio.onend = finalizar;
+                desbloqueio.onerror = finalizar;
+                try {
+                    window.speechSynthesis.speak(desbloqueio);
+                    if (typeof window.speechSynthesis.resume === "function") {
+                        window.speechSynthesis.resume();
+                    }
+                } catch (erroDesbloqueio) {
+                    console.warn("[Anderson.AI][TTS] Falha ao tentar desbloquear TTS:", erroDesbloqueio);
+                    finalizar();
+                }
+                window.setTimeout(finalizar, 400);
+            });
+        } finally {
+            ttsInicializado = true;
+            carregarVozes();
+        }
     };
 
     const popularIdiomas = (voices) => {
@@ -823,10 +861,13 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     document.addEventListener("click", tratarCliqueExternoTTS);
 
     if (ttsConfigButton && ttsMenu) {
-        ttsConfigButton.addEventListener("click", () => {
+        ttsConfigButton.addEventListener("click", async () => {
             if (!speechDisponivel) {
                 return;
             }
+            await inicializarTTSSeNecessario().catch((erro) => {
+                console.warn("[Anderson.AI][TTS] Falha ao inicializar TTS ao abrir menu:", erro);
+            });
             const vaiMostrar = ttsMenu.classList.contains("oculto");
             if (vaiMostrar) {
                 ttsMenu.classList.remove("oculto");
@@ -936,6 +977,9 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             }
         } else {
             ttsButton.addEventListener("click", async () => {
+                await inicializarTTSSeNecessario().catch((erro) => {
+                    console.warn("[Anderson.AI][TTS] Falha ao preparar TTS:", erro);
+                });
                 if (ttsEmExecucao || window.speechSynthesis.speaking) {
                     interromperLeitura("Leitura interrompida.");
                     return;
@@ -972,6 +1016,18 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         ttsRateReset.addEventListener("click", () => {
             ttsRateInput.value = "1";
             atualizarRotuloVelocidade();
+        });
+    }
+
+    if (speechDisponivel) {
+        const eventosDesbloqueio = ["click", "touchend"];
+        const prepararTTS = () => {
+            inicializarTTSSeNecessario().catch((erro) => {
+                console.warn("[Anderson.AI][TTS] Falha ao desbloquear TTS via interacao:", erro);
+            });
+        };
+        eventosDesbloqueio.forEach((eventoNome) => {
+            document.addEventListener(eventoNome, prepararTTS, { once: true, passive: true });
         });
     }
 
