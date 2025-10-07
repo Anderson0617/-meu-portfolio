@@ -659,7 +659,16 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
 
         const encontrarIdiomaDisponivel = (alvo) => idiomasUnicos.find((lang) => idiomasSaoCompatíveis(lang, alvo));
 
-        let idiomaEncontrado = idiomaAtual ? encontrarIdiomaDisponivel(idiomaAtual) : null;
+        let idiomaEncontrado = null;
+
+        const opcaoPtBr = idiomasUnicos.find((lang) => normalizarCodigoIdioma(lang) === "pt-br");
+        if (opcaoPtBr) {
+            idiomaEncontrado = opcaoPtBr;
+        }
+
+        if (!idiomaEncontrado && idiomaAtual) {
+            idiomaEncontrado = encontrarIdiomaDisponivel(idiomaAtual);
+        }
         if (!idiomaEncontrado) {
             idiomaEncontrado = encontrarIdiomaDisponivel(IDIOMA_PADRAO_TTS);
         }
@@ -702,6 +711,34 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             ttsVoiceSelect.appendChild(option);
             return;
         }
+
+        filtradas.sort((a, b) => {
+            const langA = normalizarCodigoIdioma(a.lang);
+            const langB = normalizarCodigoIdioma(b.lang);
+            const prioridade = (lang) => {
+                if (!lang) {
+                    return 3;
+                }
+                if (lang === "pt-br") {
+                    return 0;
+                }
+                if (lang.startsWith("pt")) {
+                    return 1;
+                }
+                return 2;
+            };
+            const diff = prioridade(langA) - prioridade(langB);
+            if (diff !== 0) {
+                return diff;
+            }
+            if (b.localService && !a.localService) {
+                return 1;
+            }
+            if (a.localService && !b.localService) {
+                return -1;
+            }
+            return a.name.localeCompare(b.name);
+        });
 
         filtradas.forEach((voz) => {
             const option = document.createElement("option");
