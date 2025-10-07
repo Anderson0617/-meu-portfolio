@@ -692,24 +692,17 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         const idiomaAtual = ttsLangSelect ? (ttsLangSelect.value || IDIOMA_PADRAO_TTS) : IDIOMA_PADRAO_TTS;
         popularVozes(vozesDisponiveis, idiomaAtual);
     };
-    const garantirVozesCarregadas = async () => {
+    const obterVozesDisponiveis = () => {
         if (!speechDisponivel) {
             return [];
         }
-
         if (vozesDisponiveis.length) {
             return vozesDisponiveis;
         }
-
-        const tentativasMaximas = 5;
-        for (let tentativa = 0; tentativa < tentativasMaximas; tentativa += 1) {
-            carregarVozes();
-            if (vozesDisponiveis.length) {
-                return vozesDisponiveis;
-            }
-            await esperar(200);
+        carregarVozes();
+        if (vozesDisponiveis.length) {
+            return vozesDisponiveis;
         }
-
         const vozes = window.speechSynthesis.getVoices().filter((voz) => voz.lang);
         if (vozes.length) {
             vozesDisponiveis = vozes.sort((a, b) => a.name.localeCompare(b.name));
@@ -717,7 +710,6 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             const idiomaAtual = ttsLangSelect ? (ttsLangSelect.value || IDIOMA_PADRAO_TTS) : IDIOMA_PADRAO_TTS;
             popularVozes(vozesDisponiveis, idiomaAtual);
         }
-
         return vozesDisponiveis;
     };
 
@@ -749,7 +741,27 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         }
     };
 
-    const falarUltimaResposta = async (tentativaAtual = 1) => {
+    const fracionarTextoParaFala = (texto, tamanhoMaximo = 220) => {
+        const partes = [];
+        let restante = texto;
+        while (restante.length > tamanhoMaximo) {
+            let indiceCorte = restante.lastIndexOf(".", tamanhoMaximo);
+            if (indiceCorte === -1) {
+                indiceCorte = restante.lastIndexOf(" ", tamanhoMaximo);
+            }
+            if (indiceCorte === -1) {
+                indiceCorte = tamanhoMaximo;
+            }
+            partes.push(restante.slice(0, indiceCorte + 1).trim());
+            restante = restante.slice(indiceCorte + 1).trim();
+        }
+        if (restante.trim().length) {
+            partes.push(restante.trim());
+        }
+        return partes.filter(Boolean);
+    };
+
+    const falarUltimaResposta = (tentativaAtual = 1) => {
         if (!speechDisponivel) {
             if (andersonAIChatStatus) {
                 andersonAIChatStatus.textContent = "Leitura por voz nao suportada neste navegador.";
@@ -765,8 +777,12 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             return;
         }
 
-        const voices = await garantirVozesCarregadas();
+        const voices = obterVozesDisponiveis();
         const listaVozes = Array.isArray(voices) ? voices : Array.from(voices || []);
+        if (!listaVozes.length && tentativaAtual < MAX_TTS_TENTATIVAS) {
+            window.setTimeout(() => falarUltimaResposta(tentativaAtual + 1), 200);
+            return;
+        }
         if (!listaVozes.length) {
             if (andersonAIChatStatus) {
                 andersonAIChatStatus.textContent = "Nenhuma voz sintetica disponivel neste navegador.";
@@ -775,48 +791,34 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         }
 
         const vozSelecionada = selecionarVozParaTentativa(listaVozes, tentativaAtual);
-
-        const utterance = new SpeechSynthesisUtterance(textoNormalizado);
-        utterance.volume = 1;
-        utterance.pitch = 1;
-        if (ttsRateInput) {
-            utterance.rate = Number(ttsRateInput.value) || 1;
-        }
-
+        let linguaPreferida = "";
         if (!isIOS && vozSelecionada) {
-            utterance.voice = vozSelecionada;
-            if (vozSelecionada.lang) {
-                utterance.lang = vozSelecionada.lang;
-            }
-            ultimaVozSelecionada = vozSelecionada.voiceURI;
-            if (ttsVoiceSelect && !ttsVoiceSelect.disabled) {
-                ttsVoiceSelect.value = vozSelecionada.voiceURI;
-            }
+            linguaPreferida = vozSelecionada.lang || "";
+        } else if (ttsLangSelect) {
+            linguaPreferida = ttsLangSelect.value || ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS;
+        } else {
+            linguaPreferida = navigator.language || IDIOMA_PADRAO_TTS;
         }
 
-        if (!utterance.lang) {
-            if (ttsLangSelect) {
-                const idiomaPreferido = ttsLangSelect.value || ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS;
-                if (idiomaPreferido) {
-                    utterance.lang = idiomaPreferido;
-                }
-            }
-            if (!utterance.lang && navigator.language) {
-                utterance.lang = navigator.language;
-            }
-        }
-
+        const segmentos = fracionarTextoParaFala(textoNormalizado);
+        let indiceSegmento = 0;
+        let verificadorInicio = null;
         let verificadorFala = null;
+        let falaIniciada = false;
 
-        const limparEstadoFala = () => {
+        const limparMonitores = () => {
+            if (verificadorInicio) {
+                clearTimeout(verificadorInicio);
+                verificadorInicio = null;
+            }
             if (verificadorFala) {
                 clearTimeout(verificadorFala);
                 verificadorFala = null;
             }
         };
 
-        utterance.onend = () => {
-            limparEstadoFala();
+        const finalizarLeitura = () => {
+            limparMonitores();
             cancelamentoSolicitado = false;
             ttsEmExecucao = false;
             atualizarEstadoBotaoTTS();
@@ -828,32 +830,127 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             }
         };
 
-        utterance.onerror = (evento) => {
-            limparEstadoFala();
+        const tratarErroGenerico = (codigoErro, evento, ehSegmento) => {
+            limparMonitores();
             ttsEmExecucao = false;
             atualizarEstadoBotaoTTS();
             window.speechSynthesis.cancel();
-            const codigoErro = evento && evento.error ? evento.error : "";
             const canceladoManual = cancelamentoSolicitado && (codigoErro === "interrupted" || codigoErro === "canceled");
             cancelamentoSolicitado = false;
             if (canceladoManual) {
                 return;
             }
-            if (tentativaAtual < MAX_TTS_TENTATIVAS && (codigoErro === "synthesis-failed" || codigoErro === "audio-busy" || codigoErro === "interrupted")) {
+            if (tentativaAtual < MAX_TTS_TENTATIVAS && (codigoErro === "synthesis-failed" || codigoErro === "audio-busy" || codigoErro === "interrupted" || ehSegmento)) {
                 console.warn("[Anderson.AI][TTS] Falha na tentativa " + tentativaAtual + " (" + codigoErro + "). Tentando outra voz.", evento);
                 if (andersonAIChatStatus) {
                     andersonAIChatStatus.textContent = "Nao consegui usar esta voz, tentando outra...";
                 }
                 window.setTimeout(() => {
-                    falarUltimaResposta(tentativaAtual + 1).catch((erroFallback) => {
+                    try {
+                        falarUltimaResposta(tentativaAtual + 1);
+                    } catch (erroFallback) {
                         console.error("[Anderson.AI][TTS] Falha ao tentar fallback de voz:", erroFallback);
-                    });
-                }, 160);
+                    }
+                }, 200);
                 return;
             }
             if (andersonAIChatStatus) {
                 const detalheErro = codigoErro ? " (" + codigoErro + ")" : "";
                 andersonAIChatStatus.textContent = "Nao foi possivel sintetizar a voz" + detalheErro + ".";
+            }
+        };
+
+        const configurarUtterance = (conteudoSegmento, ehUltimo) => {
+            const utter = new SpeechSynthesisUtterance(conteudoSegmento);
+            utter.volume = 1;
+            utter.pitch = 1;
+            if (ttsRateInput) {
+                utter.rate = Number(ttsRateInput.value) || 1;
+            }
+            if (!isIOS && vozSelecionada) {
+                utter.voice = vozSelecionada;
+                if (vozSelecionada.lang) {
+                    utter.lang = vozSelecionada.lang;
+                }
+                ultimaVozSelecionada = vozSelecionada.voiceURI;
+                if (ttsVoiceSelect && !ttsVoiceSelect.disabled) {
+                    ttsVoiceSelect.value = vozSelecionada.voiceURI;
+                }
+            }
+            if (!utter.lang && linguaPreferida) {
+                utter.lang = linguaPreferida;
+            }
+            if (!utter.lang && navigator.language) {
+                utter.lang = navigator.language;
+            }
+            utter.onstart = () => {
+                falaIniciada = true;
+                if (verificadorInicio) {
+                    clearTimeout(verificadorInicio);
+                    verificadorInicio = null;
+                }
+            };
+            utter.onend = () => {
+                limparMonitores();
+                if (!ehUltimo && !cancelamentoSolicitado) {
+                    indiceSegmento += 1;
+                    reproduzirSegmento();
+                } else {
+                    finalizarLeitura();
+                }
+            };
+            utter.onerror = (evento) => {
+                const codigoErro = evento && evento.error ? evento.error : "";
+                tratarErroGenerico(codigoErro, evento, true);
+            };
+            return utter;
+        };
+
+        const iniciarComSeguranca = (utter) => {
+            const iniciar = () => {
+                try {
+                    window.speechSynthesis.speak(utter);
+                    if (typeof window.speechSynthesis.resume === "function" && window.speechSynthesis.paused) {
+                        window.speechSynthesis.resume();
+                    }
+                } catch (erroSpeak) {
+                    console.error("[Anderson.AI][TTS] Falha ao chamar speak:", erroSpeak);
+                    tratarErroGenerico("speak-error", erroSpeak, true);
+                }
+            };
+
+            if (window.speechSynthesis.speaking || window.speechSynthesis.pending || window.speechSynthesis.paused) {
+                window.speechSynthesis.cancel();
+                window.setTimeout(iniciar, TTS_INTERVALO_APOS_CANCELAR);
+            } else if (isMobile) {
+                window.setTimeout(iniciar, 0);
+            } else {
+                iniciar();
+            }
+        };
+
+        const reproduzirSegmento = () => {
+            if (indiceSegmento >= segmentos.length) {
+                finalizarLeitura();
+                return;
+            }
+            falaIniciada = false;
+            const ehUltimo = indiceSegmento === segmentos.length - 1;
+            const utter = configurarUtterance(segmentos[indiceSegmento], ehUltimo);
+            iniciarComSeguranca(utter);
+
+            verificadorInicio = window.setTimeout(() => {
+                if (!falaIniciada && !window.speechSynthesis.speaking) {
+                    tratarErroGenerico("no-start", null, true);
+                }
+            }, isMobile ? 700 : 400);
+
+            if (!isIOS) {
+                verificadorFala = window.setTimeout(() => {
+                    if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+                        tratarErroGenerico("not-speaking", null, true);
+                    }
+                }, DETECTOR_FALA_TIMEOUT);
             }
         };
 
@@ -864,56 +961,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         cancelamentoSolicitado = false;
         atualizarEstadoBotaoTTS();
 
-        if (window.speechSynthesis.speaking || window.speechSynthesis.pending || window.speechSynthesis.paused) {
-            window.speechSynthesis.cancel();
-            await esperar(TTS_INTERVALO_APOS_CANCELAR);
-        }
-
-        const iniciarFala = () => {
-            try {
-                window.speechSynthesis.speak(utterance);
-                if (typeof window.speechSynthesis.resume === "function" && window.speechSynthesis.paused) {
-                    window.speechSynthesis.resume();
-                }
-            } catch (erroSpeak) {
-                console.error("[Anderson.AI][TTS] Falha ao chamar speak:", erroSpeak);
-                if (andersonAIChatStatus) {
-                    andersonAIChatStatus.textContent = "Nao consegui iniciar a leitura de voz.";
-                }
-            }
-        };
-
-        if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "")) {
-        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-            window.speechSynthesis.cancel();
-        }
-        window.setTimeout(iniciarFala, 0);
-    } else {
-        if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-            window.speechSynthesis.cancel();
-        }
-        iniciarFala();
-    }
-
-        if (!isIOS) {
-            verificadorFala = window.setTimeout(() => {
-                if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
-                    limparEstadoFala();
-                    ttsEmExecucao = false;
-                    if (tentativaAtual < MAX_TTS_TENTATIVAS) {
-                        window.speechSynthesis.cancel();
-                        falarUltimaResposta(tentativaAtual + 1).catch((erroFallback) => {
-                            console.error("[Anderson.AI][TTS] Falha no fallback de voz:", erroFallback);
-                            if (andersonAIChatStatus) {
-                                andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
-                            }
-                        });
-                    } else if (andersonAIChatStatus) {
-                        andersonAIChatStatus.textContent = "Nao consegui concluir a leitura por voz.";
-                    }
-                }
-            }, DETECTOR_FALA_TIMEOUT);
-        }
+        reproduzirSegmento();
     };
 
     fecharMenuTTS = () => {
@@ -1062,12 +1110,14 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 if (ttsMenu && !ttsMenu.classList.contains("oculto")) {
                     fecharMenuTTS();
                 }
-                falarUltimaResposta().catch((erro) => {
+                try {
+                    falarUltimaResposta();
+                } catch (erro) {
                     console.error("[Anderson.AI][TTS] Falha ao iniciar leitura:", erro);
                     if (andersonAIChatStatus) {
                         andersonAIChatStatus.textContent = "Nao consegui iniciar a leitura de voz.";
                     }
-                });
+                }
             };
 
             ttsButton.addEventListener("click", () => {
