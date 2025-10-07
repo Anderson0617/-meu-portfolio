@@ -58,8 +58,17 @@
                     <p class="chat-intro">Sou a IA, clone do Anderson. Pergunte algo!</p>
                     <div id="andersonAIChatMessages" class="chat-history" aria-live="polite"></div>
                     <form id="andersonAIChatForm" class="chat-form">
-                        <label for="andersonAIChatInput" class="sr-only">Digite sua pergunta</label>
-                        <textarea id="andersonAIChatInput" class="chat-input" name="pergunta" placeholder="Digite sua pergunta..." autocomplete="off" required></textarea>
+                        <div class="chat-input-wrapper">
+                            <textarea id="andersonAIChatInput" class="chat-input" name="pergunta" placeholder="Digite sua pergunta..." autocomplete="off" aria-label="Digite sua pergunta" required></textarea>
+                            <div class="chat-counter" role="status" aria-live="polite" aria-atomic="true" aria-label="Nenhuma execução gerada ainda.">
+                                <span class="chat-counter__digit" data-step="1">1</span>
+                                <span class="chat-counter__digit" data-step="2">2</span>
+                                <span class="chat-counter__digit" data-step="3">3</span>
+                                <span class="chat-counter__digit" data-step="4">4</span>
+                                <span class="chat-counter__digit" data-step="5">5</span>
+                                <span class="chat-counter__digit" data-step="6">6</span>
+                            </div>
+                        </div>
                         <div class="chat-actions">
                             <button type="submit" class="chat-action chat-send anderson-ai-chat__send">Enviar</button>
                             <button type="button" class="chat-action chat-tts-trigger" id="andersonAITTSButton" aria-label="Ouvir a ultima resposta">&#x1F50A; Ouvir</button>
@@ -70,8 +79,8 @@
                     <div id="andersonAITTSMenu" class="chat-tts-menu oculto" aria-hidden="true">
                         <div class="chat-tts-row">
                             <label for="andersonAITTSLang">Idioma</label>
-                            <select id="andersonAITTSLang">
-                                <option value="">Automatico</option>
+                            <select id="andersonAITTSLang" data-preferred-lang="pt-BR">
+                                <option value="pt-BR" selected>Português (Brasil)</option>
                             </select>
                         </div>
                         <div class="chat-tts-row">

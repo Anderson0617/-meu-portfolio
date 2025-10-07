@@ -125,12 +125,21 @@ const andersonAIChatMessages = document.getElementById("andersonAIChatMessages")
 const andersonAIChatStatus = document.getElementById("andersonAIChatStatus");
 const N8N_AI_ENDPOINT = "https://unexhaustively-extendible-jeni.ngrok-free.dev/webhook/anderson-ai";// <= Atualize A cada 30 minutos via ngrok-free.dev
 const FALLBACK_MENSAGEM_AI = "Desculpa, estou hospedada em servidor Particular, mas est\u00e1 desligado no momento.";
-const LIMITE_PERGUNTAS_CHAT = 7;
-const MENSAGEM_LIMITE_CHAT = "Voc\u00ea atingiu o limite de sete perguntas. Para continuar, aperte o Reset e fique \u00e0 vontade. Obrigado!";
-let totalPerguntasChat = 0;
-let limitePerguntasNotificado = false;
-let mensagemLimiteElemento = null;
-let botaoResetChat = null;
+const LIMITE_CONTINUAR_CHAT = 4;
+const LIMITE_ENCERRAMENTO_CHAT = 6;
+const MENSAGEM_CONTINUAR_CHAT = "Voc\u00ea atingiu 4 execu\u00e7\u00f5es com o Anderson.AI. Clique em Continuar para seguir com a conversa.";
+const MENSAGEM_ENCERRAMENTO_CHAT = "Obrigado pela conversa! Voc\u00ea atingiu o limite de 6 execu\u00e7\u00f5es. Fique \u00e0 vontade pra continuar explorando meu portf\u00f3lio. A tecnologia mudou minha vida para melhor. Hoje n\u00e3o me vejo sem programar, porque cada linha de c\u00f3digo me leva mais longe \u2014 e o c\u00e9u n\u00e3o tem limites \ud83d\ude80\ud83e\udde0.";
+const MENSAGEM_APOS_ENCERRAMENTO = "E deu! O limite de 6 execu\u00e7\u00f5es j\u00e1 foi atingido.";
+const PLACEHOLDER_CHAT_ENCERRADO = "Limite atingido. Novas perguntas trar\u00e3o o aviso final.";
+let totalRespostasValidas = 0;
+let aguardandoConfirmacaoContinuar = false;
+let solicitacaoContinuarAtiva = false;
+let chatEncerrado = false;
+let mensagemEncerramentoElemento = null;
+let botaoContinuarChat = null;
+let perguntaPendente = null;
+let placeholderPendente = null;
+let mensagemContinuarElemento = null;
 
 let ultimaPerguntaItem = null;
 let ultimaRespostaFalada = "";
@@ -141,74 +150,166 @@ const placeholderPensando = String.fromCodePoint(0x1F914) + " ...";
 const ICONE_OUVIR = String.fromCodePoint(0x1F50A);
 const ICONE_MUDO = "X";
 const ICONE_SEM_AUDIO = String.fromCodePoint(0x1F507);
+const chatCounter = document.querySelector(".chat-counter");
+const chatCounterDigits = chatCounter ? chatCounter.querySelectorAll(".chat-counter__digit") : [];
 
-const exibirAvisoLimiteChat = () => {
-    const botaoEnviar = andersonAIChatForm ? andersonAIChatForm.querySelector(".anderson-ai-chat__send") : null;
-
-    if (!limitePerguntasNotificado) {
-        limitePerguntasNotificado = true;
-        mensagemLimiteElemento = adicionarMensagemAI(MENSAGEM_LIMITE_CHAT, "bot");
-    } else if (!mensagemLimiteElemento && andersonAIChatMessages) {
-        mensagemLimiteElemento = andersonAIChatMessages.querySelector(".chat-item:last-child .answer:last-child");
+const atualizarContadorPerguntas = () => {
+    if (chatCounterDigits.length) {
+        chatCounterDigits.forEach((digito) => {
+            const passo = Number(digito.dataset.step || "0");
+            if (passo && passo <= totalRespostasValidas) {
+                digito.classList.add("is-active");
+            } else {
+                digito.classList.remove("is-active");
+            }
+        });
     }
-
-    if (andersonAIChatStatus) {
-        andersonAIChatStatus.textContent = MENSAGEM_LIMITE_CHAT;
+    if (chatCounter) {
+        let descricao = "Nenhuma execução gerada ainda.";
+        if (totalRespostasValidas === 1) {
+            descricao = "1 execução concluída de 6.";
+        } else if (totalRespostasValidas > 1) {
+            descricao = totalRespostasValidas + " execuções concluídas de 6.";
+        }
+        chatCounter.setAttribute("aria-label", descricao);
     }
+};
 
-    if (andersonAIChatInput) {
-        andersonAIChatInput.value = "";
-        andersonAIChatInput.disabled = true;
-        andersonAIChatInput.placeholder = "Limite atingido. Use o bot\u00e3o Reset.";
+const removerMensagemContinuar = () => {
+    if (botaoContinuarChat) {
+        botaoContinuarChat.remove();
+        botaoContinuarChat = null;
     }
-
-    if (botaoEnviar) {
-        botaoEnviar.disabled = true;
-    }
-
-    if (andersonAIChatMessages) {
-        const destino = mensagemLimiteElemento && mensagemLimiteElemento.parentElement
-            ? mensagemLimiteElemento.parentElement
-            : andersonAIChatMessages.lastElementChild;
-
-        if (destino && !botaoResetChat) {
-            botaoResetChat = document.createElement("button");
-            botaoResetChat.type = "button";
-            botaoResetChat.className = "chat-reset";
-            botaoResetChat.textContent = "Reset Chat";
-            botaoResetChat.addEventListener("click", resetLimiteChat);
-            destino.appendChild(botaoResetChat);
+    if (mensagemContinuarElemento) {
+        const parent = mensagemContinuarElemento.parentElement;
+        mensagemContinuarElemento.remove();
+        mensagemContinuarElemento = null;
+        if (parent && !parent.querySelector(".answer")) {
+            parent.remove();
         }
     }
 };
 
-const resetLimiteChat = () => {
+const anexarBotaoContinuar = (destino) => {
+    if (!destino || botaoContinuarChat || chatEncerrado) {
+        return;
+    }
+    botaoContinuarChat = document.createElement("button");
+    botaoContinuarChat.type = "button";
+    botaoContinuarChat.className = "chat-continue";
+    botaoContinuarChat.textContent = "Continuar";
+    botaoContinuarChat.addEventListener("click", executarContinuacaoChat);
+    destino.appendChild(botaoContinuarChat);
+    botaoContinuarChat.focus();
+};
+
+const solicitarContinuacaoChat = (pergunta, placeholderElemento) => {
+    if (solicitacaoContinuarAtiva || chatEncerrado) {
+        return;
+    }
+    removerMensagemContinuar();
+    solicitacaoContinuarAtiva = true;
+    perguntaPendente = pergunta;
+    placeholderPendente = placeholderElemento;
+
+    if (placeholderElemento) {
+        placeholderElemento.textContent = "Clique no bot\u00e3o Continuar para seguir com a conversa.";
+        placeholderElemento.classList.remove("answer--placeholder");
+    }
+
     const botaoEnviar = andersonAIChatForm ? andersonAIChatForm.querySelector(".anderson-ai-chat__send") : null;
-
-    totalPerguntasChat = 0;
-    limitePerguntasNotificado = false;
-    mensagemLimiteElemento = null;
-
-    if (botaoResetChat) {
-        botaoResetChat.remove();
-        botaoResetChat = null;
+    if (botaoEnviar) {
+        botaoEnviar.disabled = true;
     }
-
     if (andersonAIChatInput) {
-        andersonAIChatInput.disabled = false;
-        andersonAIChatInput.placeholder = placeholderPadrao;
-        andersonAIChatInput.focus();
+        andersonAIChatInput.disabled = true;
+        andersonAIChatInput.placeholder = "Use o bot\u00e3o Continuar para prosseguir.";
     }
+    if (andersonAIChatStatus) {
+        andersonAIChatStatus.textContent = MENSAGEM_CONTINUAR_CHAT;
+    }
+    const respostaAviso = adicionarMensagemAI(MENSAGEM_CONTINUAR_CHAT, "bot");
+    mensagemContinuarElemento = respostaAviso;
+    const destino = respostaAviso && respostaAviso.parentElement
+        ? respostaAviso.parentElement
+        : (andersonAIChatMessages ? andersonAIChatMessages.lastElementChild : null);
+    anexarBotaoContinuar(destino);
+};
 
+const encerrarChatDefinitivo = () => {
+    if (chatEncerrado) {
+        return;
+    }
+    chatEncerrado = true;
+    removerMensagemContinuar();
+    aguardandoConfirmacaoContinuar = false;
+    solicitacaoContinuarAtiva = false;
+    perguntaPendente = null;
+    placeholderPendente = null;
+    const botaoEnviar = andersonAIChatForm ? andersonAIChatForm.querySelector(".anderson-ai-chat__send") : null;
     if (botaoEnviar) {
         botaoEnviar.disabled = false;
     }
-
+    if (andersonAIChatInput) {
+        andersonAIChatInput.disabled = false;
+        andersonAIChatInput.placeholder = PLACEHOLDER_CHAT_ENCERRADO;
+    }
+    if (botaoContinuarChat) {
+        botaoContinuarChat.remove();
+        botaoContinuarChat = null;
+    }
+    mensagemEncerramentoElemento = adicionarMensagemAI(MENSAGEM_ENCERRAMENTO_CHAT, "bot");
     if (andersonAIChatStatus) {
-        andersonAIChatStatus.textContent = "Limite reiniciado. Pode continuar perguntando!";
+        andersonAIChatStatus.textContent = MENSAGEM_ENCERRAMENTO_CHAT;
+    }
+};
+
+const executarContinuacaoChat = () => {
+    if (!solicitacaoContinuarAtiva || !perguntaPendente) {
+        return;
+    }
+    aguardandoConfirmacaoContinuar = false;
+    solicitacaoContinuarAtiva = false;
+
+    const perguntaParaEnviar = perguntaPendente;
+    const placeholderParaAtualizar = placeholderPendente;
+    perguntaPendente = null;
+    placeholderPendente = null;
+
+    removerMensagemContinuar();
+
+    const botaoEnviar = andersonAIChatForm ? andersonAIChatForm.querySelector(".anderson-ai-chat__send") : null;
+    if (botaoEnviar) {
+        botaoEnviar.disabled = false;
+    }
+    if (andersonAIChatInput) {
+        andersonAIChatInput.disabled = false;
+        andersonAIChatInput.placeholder = placeholderPadrao;
+    }
+    if (andersonAIChatStatus && andersonAIChatStatus.textContent === MENSAGEM_CONTINUAR_CHAT) {
+        andersonAIChatStatus.textContent = "";
     }
 
-    adicionarMensagemAI("Limite reiniciado. Pode continuar perguntando!", "bot");
+    if (placeholderParaAtualizar) {
+        placeholderParaAtualizar.textContent = "Pensando...";
+        placeholderParaAtualizar.classList.add("answer--placeholder");
+    }
+
+    enviarPerguntaParaIA(perguntaParaEnviar, placeholderParaAtualizar).catch((erro) => {
+        console.error("[Anderson.AI][Continuar] Falha ao reenviar pergunta ap\u00f3s confirma\u00e7\u00e3o:", erro);
+    });
+};
+
+const registrarRespostaValida = () => {
+    totalRespostasValidas += 1;
+    atualizarContadorPerguntas();
+    if (totalRespostasValidas >= LIMITE_ENCERRAMENTO_CHAT) {
+        encerrarChatDefinitivo();
+        return;
+    }
+    if (!aguardandoConfirmacaoContinuar && totalRespostasValidas === LIMITE_CONTINUAR_CHAT) {
+        aguardandoConfirmacaoContinuar = true;
+    }
 };
 
 
@@ -352,9 +453,15 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     let vozesDisponiveis = [];
     let ultimaVozSelecionada = "";
     let ttsEmExecucao = false;
+    let cancelamentoSolicitado = false;
 
     const MAX_TTS_TENTATIVAS = 3;
     const TTS_INTERVALO_APOS_CANCELAR = 80;
+    const IDIOMA_PADRAO_TTS = "pt-BR";
+
+    if (ttsLangSelect && !ttsLangSelect.dataset.preferredLang) {
+        ttsLangSelect.dataset.preferredLang = IDIOMA_PADRAO_TTS;
+    }
 
     const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -374,7 +481,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         }
 
         const candidatos = [];
-        const idiomaSelecionado = ttsLangSelect && ttsLangSelect.value ? ttsLangSelect.value : "";
+        const idiomaSelecionado = ttsLangSelect ? (ttsLangSelect.value || ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS) : IDIOMA_PADRAO_TTS;
         const idiomaNavegador = navigator.language || "";
 
         if (idiomaSelecionado) {
@@ -445,7 +552,9 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         if (!ttsLangSelect) {
             return;
         }
-        const idiomaAtual = ttsLangSelect.value;
+        const idiomaPreferido = ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS;
+        const idiomaAnterior = ttsLangSelect.value;
+        let idiomaAtual = idiomaAnterior || idiomaPreferido;
         ttsLangSelect.innerHTML = "";
         const opcaoAuto = document.createElement("option");
         opcaoAuto.value = "";
@@ -462,9 +571,18 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
 
         if (idiomaAtual && idiomasUnicos.includes(idiomaAtual)) {
             ttsLangSelect.value = idiomaAtual;
-        } else if (!idiomaAtual && idiomasUnicos.includes("pt-BR")) {
-            ttsLangSelect.value = "pt-BR";
+        } else if (idiomasUnicos.includes(IDIOMA_PADRAO_TTS)) {
+            idiomaAtual = IDIOMA_PADRAO_TTS;
+            ttsLangSelect.value = IDIOMA_PADRAO_TTS;
+        } else if (idiomasUnicos.length) {
+            idiomaAtual = idiomasUnicos[0];
+            ttsLangSelect.value = idiomaAtual;
+        } else {
+            idiomaAtual = "";
+            ttsLangSelect.value = "";
         }
+
+        ttsLangSelect.dataset.preferredLang = idiomaAtual || IDIOMA_PADRAO_TTS;
     };
 
     const popularVozes = (voices, lang) => {
@@ -473,7 +591,11 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         }
         const selecionada = ultimaVozSelecionada;
         ttsVoiceSelect.innerHTML = "";
-        const filtradas = lang ? voices.filter((voz) => voz.lang === lang) : voices;
+        const filtroIdioma = lang || IDIOMA_PADRAO_TTS;
+        let filtradas = filtroIdioma ? voices.filter((voz) => voz.lang === filtroIdioma) : voices;
+        if (!filtradas.length) {
+            filtradas = voices;
+        }
 
         if (!filtradas.length) {
             ttsVoiceSelect.disabled = true;
@@ -509,7 +631,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         }
         vozesDisponiveis = voices.sort((a, b) => a.name.localeCompare(b.name));
         popularIdiomas(vozesDisponiveis);
-        const idiomaAtual = ttsLangSelect ? ttsLangSelect.value : "";
+        const idiomaAtual = ttsLangSelect ? (ttsLangSelect.value || IDIOMA_PADRAO_TTS) : IDIOMA_PADRAO_TTS;
         popularVozes(vozesDisponiveis, idiomaAtual);
     };
     const garantirVozesCarregadas = async () => {
@@ -534,7 +656,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         if (vozes.length) {
             vozesDisponiveis = vozes.sort((a, b) => a.name.localeCompare(b.name));
             popularIdiomas(vozesDisponiveis);
-            const idiomaAtual = ttsLangSelect ? ttsLangSelect.value : "";
+            const idiomaAtual = ttsLangSelect ? (ttsLangSelect.value || IDIOMA_PADRAO_TTS) : IDIOMA_PADRAO_TTS;
             popularVozes(vozesDisponiveis, idiomaAtual);
         }
 
@@ -546,9 +668,11 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         if (!speechDisponivel || !ttsLangSelect) {
             return;
         }
-        if (!ttsLangSelect.value && Array.from(ttsLangSelect.options).some((opt) => opt.value === "pt-BR")) {
-            ttsLangSelect.value = "pt-BR";
-            popularVozes(vozesDisponiveis, "pt-BR");
+        const preferido = ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS;
+        const opcoes = Array.from(ttsLangSelect.options);
+        if (opcoes.some((opt) => opt.value === preferido) && ttsLangSelect.value !== preferido) {
+            ttsLangSelect.value = preferido;
+            popularVozes(vozesDisponiveis, preferido);
         }
     };
 
@@ -556,7 +680,8 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         if (!speechDisponivel) {
             return;
         }
-        if (window.speechSynthesis.speaking || ttsEmExecucao) {
+        if (window.speechSynthesis.speaking || ttsEmExecucao || window.speechSynthesis.pending || window.speechSynthesis.paused) {
+            cancelamentoSolicitado = true;
             window.speechSynthesis.cancel();
         }
         ttsEmExecucao = false;
@@ -607,13 +732,17 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             if (ttsVoiceSelect && !ttsVoiceSelect.disabled) {
                 ttsVoiceSelect.value = vozSelecionada.voiceURI;
             }
-        } else if (ttsLangSelect && ttsLangSelect.value) {
-            utterance.lang = ttsLangSelect.value;
+        } else if (ttsLangSelect) {
+            const idiomaPreferido = ttsLangSelect.value || ttsLangSelect.dataset.preferredLang || IDIOMA_PADRAO_TTS;
+            if (idiomaPreferido) {
+                utterance.lang = idiomaPreferido;
+            }
         } else if (navigator.language) {
             utterance.lang = navigator.language;
         }
 
         utterance.onend = () => {
+            cancelamentoSolicitado = false;
             ttsEmExecucao = false;
             atualizarEstadoBotaoTTS();
             if (andersonAIChatStatus) {
@@ -629,6 +758,11 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             atualizarEstadoBotaoTTS();
             window.speechSynthesis.cancel();
             const codigoErro = evento && evento.error ? evento.error : "";
+            const canceladoManual = cancelamentoSolicitado && (codigoErro === "interrupted" || codigoErro === "canceled");
+            cancelamentoSolicitado = false;
+            if (canceladoManual) {
+                return;
+            }
             if (tentativaAtual < MAX_TTS_TENTATIVAS && (codigoErro === "synthesis-failed" || codigoErro === "audio-busy" || codigoErro === "interrupted")) {
                 console.warn("[Anderson.AI][TTS] Falha na tentativa " + tentativaAtual + " (" + codigoErro + "). Tentando outra voz.", evento);
                 if (andersonAIChatStatus) {
@@ -651,6 +785,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             andersonAIChatStatus.textContent = tentativaAtual === 1 ? "Lendo resposta..." : "Ajustando voz... tentando novamente.";
         }
         ttsEmExecucao = true;
+        cancelamentoSolicitado = false;
         atualizarEstadoBotaoTTS();
 
         if (window.speechSynthesis.speaking || window.speechSynthesis.pending || window.speechSynthesis.paused) {
@@ -741,6 +876,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             const contentType = resposta.headers.get("content-type") || "";
             const carga = contentType.includes("application/json") ? await resposta.json() : await resposta.text();
             const respostaExtraida = extrairRespostaIA(carga) || FALLBACK_MENSAGEM_AI;
+            const respostaValida = respostaExtraida !== FALLBACK_MENSAGEM_AI;
 
             if (placeholderElemento) {
                 placeholderElemento.textContent = respostaExtraida;
@@ -751,8 +887,16 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
 
             ultimaRespostaFalada = respostaExtraida;
 
+            if (respostaValida) {
+                registrarRespostaValida();
+            }
+
             if (andersonAIChatStatus) {
-                andersonAIChatStatus.textContent = respostaExtraida === FALLBACK_MENSAGEM_AI ? FALLBACK_MENSAGEM_AI : "";
+                if (!respostaValida) {
+                    andersonAIChatStatus.textContent = FALLBACK_MENSAGEM_AI;
+                } else if (!chatEncerrado && !solicitacaoContinuarAtiva) {
+                    andersonAIChatStatus.textContent = "";
+                }
             }
         } catch (erro) {
             console.error("Erro ao consultar Anderson.AI:", erro);
@@ -771,9 +915,14 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 botaoEnviar.disabled = false;
             }
             if (andersonAIChatInput) {
-                andersonAIChatInput.disabled = false;
-                andersonAIChatInput.placeholder = placeholderPadrao;
-                andersonAIChatInput.focus();
+                if (chatEncerrado) {
+                    andersonAIChatInput.disabled = false;
+                    andersonAIChatInput.placeholder = PLACEHOLDER_CHAT_ENCERRADO;
+                } else {
+                    andersonAIChatInput.disabled = false;
+                    andersonAIChatInput.placeholder = placeholderPadrao;
+                    andersonAIChatInput.focus();
+                }
             }
         }
     };
@@ -802,7 +951,9 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     if (ttsLangSelect) {
         ttsLangSelect.addEventListener("change", () => {
             ultimaVozSelecionada = "";
-            popularVozes(vozesDisponiveis, ttsLangSelect.value);
+            const valorSelecionado = ttsLangSelect.value;
+            ttsLangSelect.dataset.preferredLang = valorSelecionado || IDIOMA_PADRAO_TTS;
+            popularVozes(vozesDisponiveis, valorSelecionado || IDIOMA_PADRAO_TTS);
         });
     }
 
@@ -854,8 +1005,11 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         });
 
         andersonAIChatInput.addEventListener("input", () => {
+            if (chatEncerrado) {
+                return;
+            }
             andersonAIChatInput.placeholder = placeholderPadrao;
-            if (andersonAIChatStatus) {
+            if (andersonAIChatStatus && !solicitacaoContinuarAtiva) {
                 andersonAIChatStatus.textContent = "";
             }
         });
@@ -863,8 +1017,10 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         andersonAIChatForm.addEventListener("submit", async (evento) => {
             evento.preventDefault();
 
-            if (limitePerguntasNotificado || totalPerguntasChat >= LIMITE_PERGUNTAS_CHAT) {
-                exibirAvisoLimiteChat();
+            if (solicitacaoContinuarAtiva) {
+                if (andersonAIChatStatus) {
+                    andersonAIChatStatus.textContent = MENSAGEM_CONTINUAR_CHAT;
+                }
                 return;
             }
 
@@ -876,26 +1032,38 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 return;
             }
 
-            totalPerguntasChat += 1;
-
-            if (andersonAIChatInput) {
-                andersonAIChatInput.placeholder = placeholderPensando;
-            }
             adicionarMensagemAI(pergunta, "user");
             if (andersonAIChatInput) {
                 andersonAIChatInput.value = "";
             }
+            if (chatEncerrado) {
+                adicionarMensagemAI(MENSAGEM_APOS_ENCERRAMENTO, "bot");
+                if (andersonAIChatStatus) {
+                    andersonAIChatStatus.textContent = MENSAGEM_APOS_ENCERRAMENTO;
+                }
+                return;
+            }
+
+            if (andersonAIChatInput) {
+                andersonAIChatInput.placeholder = placeholderPensando;
+            }
             const placeholderResposta = adicionarMensagemAI("Pensando...", "placeholder");
+
+            if (aguardandoConfirmacaoContinuar && !solicitacaoContinuarAtiva) {
+                if (placeholderResposta) {
+                    placeholderResposta.classList.remove("answer--placeholder");
+                }
+                solicitarContinuacaoChat(pergunta, placeholderResposta);
+                return;
+            }
+
             await enviarPerguntaParaIA(pergunta, placeholderResposta);
             if (placeholderResposta) {
                 placeholderResposta.classList.remove("answer--placeholder");
             }
-
-            if (totalPerguntasChat >= LIMITE_PERGUNTAS_CHAT) {
-                exibirAvisoLimiteChat();
-            }
         });
     }
+    atualizarContadorPerguntas();
     atualizarEstadoBotaoTTS();
     atualizarEstadoBotaoTTS();
     interromperLeituraTTS = interromperLeitura;
@@ -1415,5 +1583,8 @@ if (graficoCanvas) {
         });
     }
 }
+
+
+
 
 
