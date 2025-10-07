@@ -462,6 +462,25 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
     const isIOS = /iP(hone|od|ad)/i.test(navigator.userAgent || "") || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent || "");
     const DETECTOR_FALA_TIMEOUT = isMobile ? 4000 : 1500;
+    const normalizarCodigoIdioma = (codigo) => {
+        if (!codigo) {
+            return "";
+        }
+        return String(codigo).toLowerCase().replace(/_/g, "-");
+    };
+    const idiomasSaoCompatíveis = (codigoVoz, codigoDesejado) => {
+        const vozNorm = normalizarCodigoIdioma(codigoVoz);
+        const desejadoNorm = normalizarCodigoIdioma(codigoDesejado);
+        if (!vozNorm || !desejadoNorm) {
+            return false;
+        }
+        if (vozNorm === desejadoNorm) {
+            return true;
+        }
+        const baseVoz = vozNorm.split("-")[0];
+        const baseDesejado = desejadoNorm.split("-")[0];
+        return baseVoz === baseDesejado;
+    };
 
     if (ttsLangSelect && !ttsLangSelect.dataset.preferredLang) {
         ttsLangSelect.dataset.preferredLang = IDIOMA_PADRAO_TTS;
@@ -489,16 +508,16 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         const idiomaNavegador = navigator.language || "";
 
         if (idiomaSelecionado) {
-            candidatos.push((voz) => voz.lang === idiomaSelecionado && voz.localService);
-            candidatos.push((voz) => voz.lang === idiomaSelecionado);
+            candidatos.push((voz) => idiomasSaoCompatíveis(voz.lang, idiomaSelecionado) && voz.localService);
+            candidatos.push((voz) => idiomasSaoCompatíveis(voz.lang, idiomaSelecionado));
         }
         if (idiomaNavegador) {
-            candidatos.push((voz) => voz.lang === idiomaNavegador && voz.localService);
-            candidatos.push((voz) => voz.lang === idiomaNavegador);
+            candidatos.push((voz) => idiomasSaoCompatíveis(voz.lang, idiomaNavegador) && voz.localService);
+            candidatos.push((voz) => idiomasSaoCompatíveis(voz.lang, idiomaNavegador));
         }
 
-        candidatos.push((voz) => voz.lang && voz.lang.startsWith("pt") && voz.localService);
-        candidatos.push((voz) => voz.lang && voz.lang.startsWith("pt"));
+        candidatos.push((voz) => normalizarCodigoIdioma(voz.lang).startsWith("pt") && voz.localService);
+        candidatos.push((voz) => normalizarCodigoIdioma(voz.lang).startsWith("pt"));
         candidatos.push((voz) => voz.default);
         candidatos.push((voz) => voz.localService);
 
@@ -619,7 +638,18 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         opcaoAuto.textContent = "Automatico";
         ttsLangSelect.appendChild(opcaoAuto);
 
-        const idiomasUnicos = Array.from(new Set(voices.map((voz) => voz.lang))).sort();
+        const idiomasUnicos = [];
+        voices.forEach((voz) => {
+            const langOriginal = voz.lang || "";
+            if (!langOriginal) {
+                return;
+            }
+            if (!idiomasUnicos.some((item) => idiomasSaoCompatíveis(item, langOriginal))) {
+                idiomasUnicos.push(langOriginal);
+            }
+        });
+        idiomasUnicos.sort((a, b) => obterNomeIdioma(a).localeCompare(obterNomeIdioma(b), "pt-BR"));
+
         idiomasUnicos.forEach((lang) => {
             const option = document.createElement("option");
             option.value = lang;
@@ -627,14 +657,19 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
             ttsLangSelect.appendChild(option);
         });
 
-        if (idiomaAtual && idiomasUnicos.includes(idiomaAtual)) {
-            ttsLangSelect.value = idiomaAtual;
-        } else if (idiomasUnicos.includes(IDIOMA_PADRAO_TTS)) {
-            idiomaAtual = IDIOMA_PADRAO_TTS;
-            ttsLangSelect.value = IDIOMA_PADRAO_TTS;
-        } else if (idiomasUnicos.length) {
-            idiomaAtual = idiomasUnicos[0];
-            ttsLangSelect.value = idiomaAtual;
+        const encontrarIdiomaDisponivel = (alvo) => idiomasUnicos.find((lang) => idiomasSaoCompatíveis(lang, alvo));
+
+        let idiomaEncontrado = idiomaAtual ? encontrarIdiomaDisponivel(idiomaAtual) : null;
+        if (!idiomaEncontrado) {
+            idiomaEncontrado = encontrarIdiomaDisponivel(IDIOMA_PADRAO_TTS);
+        }
+        if (!idiomaEncontrado && idiomasUnicos.length) {
+            idiomaEncontrado = idiomasUnicos.find((lang) => normalizarCodigoIdioma(lang).startsWith("pt")) || idiomasUnicos[0];
+        }
+
+        if (idiomaEncontrado) {
+            ttsLangSelect.value = idiomaEncontrado;
+            idiomaAtual = idiomaEncontrado;
         } else {
             idiomaAtual = "";
             ttsLangSelect.value = "";
@@ -650,9 +685,14 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
         const selecionada = ultimaVozSelecionada;
         ttsVoiceSelect.innerHTML = "";
         const filtroIdioma = lang || IDIOMA_PADRAO_TTS;
-        let filtradas = filtroIdioma ? voices.filter((voz) => voz.lang === filtroIdioma) : voices;
+        let filtradas = filtroIdioma ? voices.filter((voz) => idiomasSaoCompatíveis(voz.lang, filtroIdioma)) : voices;
+        if (!filtradas.length && filtroIdioma) {
+            const baseFiltro = normalizarCodigoIdioma(filtroIdioma).split("-")[0];
+            filtradas = voices.filter((voz) => normalizarCodigoIdioma(voz.lang).startsWith(baseFiltro));
+        }
         if (!filtradas.length) {
-            filtradas = voices;
+            const fallbackPt = voices.filter((voz) => normalizarCodigoIdioma(voz.lang).startsWith("pt"));
+            filtradas = fallbackPt.length ? fallbackPt : voices;
         }
 
         if (!filtradas.length) {
