@@ -1415,3 +1415,4 @@ if (graficoCanvas) {
         });
     }
 }
+
