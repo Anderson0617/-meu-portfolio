@@ -567,8 +567,25 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 desbloqueio.volume = 0;
                 desbloqueio.rate = 1;
                 desbloqueio.pitch = 1;
-                desbloqueio.onend = finalizar;
                 desbloqueio.onerror = finalizar;
+                desbloqueio.onend = () => {
+                    const filler = new SpeechSynthesisUtterance("Anderson AI pronto.");
+                    filler.volume = 0.05;
+                    filler.rate = 0.8;
+                    filler.pitch = 0.9;
+                    filler.lang = IDIOMA_PADRAO_TTS;
+                    filler.onerror = finalizar;
+                    filler.onend = finalizar;
+                    try {
+                        window.speechSynthesis.speak(filler);
+                        if (typeof window.speechSynthesis.resume === "function") {
+                            window.speechSynthesis.resume();
+                        }
+                    } catch (erroFiller) {
+                        console.warn("[Anderson.AI][TTS] Falha ao reproduzir filler:", erroFiller);
+                        finalizar();
+                    }
+                };
                 try {
                     window.speechSynthesis.speak(desbloqueio);
                     if (typeof window.speechSynthesis.resume === "function") {
@@ -578,7 +595,7 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                     console.warn("[Anderson.AI][TTS] Falha ao tentar desbloquear TTS:", erroDesbloqueio);
                     finalizar();
                 }
-                window.setTimeout(finalizar, 400);
+                window.setTimeout(finalizar, 1200);
             });
         } finally {
             ttsInicializado = true;
