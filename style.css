@@ -178,7 +178,11 @@ body {
     z-index: -2;
 }
 
-.caixa-video video {
+.caixa-video {
+    display: block;
+}
+
+.caixa-video__video {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -1394,6 +1398,34 @@ body.dark-mode .chat-status {
         width: 100%;
         min-width: 0;
         box-sizing: border-box;
+    }
+}
+
+
+
+
+
+
+
+
+.caixa-video__video--mobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .caixa-video {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .caixa-video__video--desktop {
+        display: none;
+    }
+
+    .caixa-video__video--mobile {
+        display: block;
+        flex: 1 0 auto;
+        height: 33.334vh;
     }
 }
 
