@@ -265,6 +265,9 @@ body > *:not(.caixa-video):not(.video-fallback):not(.main-header):not(.rastro) {
 }
 
 .frase-efeito {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-size: 18px;
     color: var(--frase-destaque-color);
@@ -908,7 +911,7 @@ body.dark-mode .player-label {
 
 @media (max-width: 480px) {
     body {
-        padding: calc(24px + var(--header-height)) 16px 48px;
+        padding: var(--header-height) 16px 48px;
     }
 
     .social-nav {
@@ -919,8 +922,12 @@ body.dark-mode .player-label {
     .frase-efeito {
         white-space: normal;
         line-height: 1.4;
-        min-height: 48px;
+        min-height: 3.4em;
+        height: 3.4em;
         padding: 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     #btnMusicas {
