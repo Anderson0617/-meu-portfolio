@@ -1988,3 +1988,4 @@ document.addEventListener("DOMContentLoaded", ajustarVideosDeFundo);
 window.addEventListener("resize", ajustarVideosDeFundo);
 window.addEventListener("orientationchange", ajustarVideosDeFundo);
 ajustarVideosDeFundo();
+
