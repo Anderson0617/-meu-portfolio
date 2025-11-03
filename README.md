@@ -68,7 +68,7 @@ Se o servidor estiver desligado, essas funcionalidades podem não estar ativas n
 ## 🚧 Projetos Individuais
 
 🍔 **Dev-Burger** → Cardápio digital responsivo.  
-🧑‍🏫 **Mentor.Dev** → Gerador de textos com IA.  
+🧬 **Evolução Computacional: Quantum-AI** → Experiência web imersiva sobre a evolução da computação (React 19, Vite, Phaser 3).  
 ☕ **Cyber-Café Dev** → Landing page temática.  
 
 ---
@@ -132,7 +132,7 @@ If the server is offline, these features may be temporarily unavailable.
 
 🚧 Individual Projects
 🍔 Dev-Burger → Responsive digital menu.
-🧑‍🏫 Mentor.Dev → AI-powered text generator.
+🧬 Evolução Computacional: Quantum-AI → Immersive web experience tracing computing from classical to quantum eras (React 19, Vite, Phaser 3).
 ☕ Cyber-Café Dev → Themed landing page.
 
 🚀 Running Locally
