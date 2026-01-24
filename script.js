@@ -1989,6 +1989,64 @@ window.addEventListener("resize", ajustarVideosDeFundo);
 window.addEventListener("orientationchange", ajustarVideosDeFundo);
 ajustarVideosDeFundo();
 
+(function () {
+    const container = document.getElementById("contadorVisitantes");
+    if (!container) {
+        return;
+    }
+
+    const valueEl = container.querySelector(".contador-visitantes__value");
+    const STORAGE_COUNT = "meu-portfolio-contador-valor";
+    const STORAGE_TIMESTAMP = "meu-portfolio-visita-ultima";
+    const BASE_COUNT = 373;
+
+    const safeGet = (key) => {
+        try {
+            return localStorage.getItem(key);
+        } catch (error) {
+            console.warn("[Contador] localStorage inacessível:", error);
+            return null;
+        }
+    };
+
+    const safeSet = (key, value) => {
+        try {
+            localStorage.setItem(key, value);
+        } catch (error) {
+            console.warn("[Contador] não foi possível gravar em localStorage:", error);
+        }
+    };
+
+    const toNumber = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const storedCount = toNumber(safeGet(STORAGE_COUNT));
+    let totalCount = storedCount !== null ? Math.max(storedCount, BASE_COUNT) : BASE_COUNT;
+
+    totalCount = Math.max(totalCount, BASE_COUNT) + 1;
+    safeSet(STORAGE_COUNT, String(totalCount));
+    safeSet(STORAGE_TIMESTAMP, new Date().toISOString());
+
+    if (valueEl) {
+        valueEl.textContent = totalCount.toLocaleString("pt-BR");
+    }
+
+    const lastVisit = safeGet(STORAGE_TIMESTAMP);
+    if (lastVisit) {
+        const parsedDate = new Date(lastVisit);
+        if (!Number.isNaN(parsedDate)) {
+            const formatted = parsedDate.toLocaleDateString("pt-BR", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+            });
+            container.setAttribute("data-ultima-atualizacao", formatted);
+        }
+    }
+})();
+
 
 
 
