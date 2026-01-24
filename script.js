@@ -2022,116 +2022,175 @@ window.addEventListener("orientationchange", ajustarVideosDeFundo);
 ajustarVideosDeFundo();
 
 (function () {
-    const container = document.getElementById("contadorVisitantes");
-    if (!container) {
-        return;
-    }
+	const container = document.getElementById("contadorVisitantes");
+	if (!container) {
+		return;
+	}
 
-    const valueEl = container.querySelector(".contador-visitantes__value");
-    const STORAGE_COUNT = "meu-portfolio-contador-valor";
-    const SESSION_FLAG = "meu-portfolio-contador-session";
-    const BASE_COUNT = 373;
+	const COUNT_API_BASE = "https://api.countapi.xyz";
+	const COUNT_NAMESPACE = "anderson-portfolio";
+	const COUNT_KEY = "visitantes";
+	const STORAGE_COUNT = "meu-portfolio-contador-global";
+	const SESSION_FLAG = "meu-portfolio-contador-global-session";
+	const BASE_COUNT = 373;
+	const POLL_INTERVAL = 25000;
 
-    const toNumber = (value) => {
-        const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : null;
-    };
+	// Para definir o valor inicial 373 execute uma única vez (fora do front-end):
+	// curl "https://api.countapi.xyz/create?namespace=anderson-portfolio&key=visitantes&value=373" -H "Content-Type: application/json"
 
-    const safeLocalGet = (key) => {
-        try {
-            return localStorage.getItem(key);
-        } catch (error) {
-            if (isDevEnv) {
-                console.warn("[Contador] localStorage inacessível:", error);
-            }
-            return null;
-        }
-    };
+	const valueEl = container.querySelector(".contador-visitantes__value");
 
-    const safeLocalSet = (key, value) => {
-        try {
-            localStorage.setItem(key, value);
-        } catch (error) {
-            if (isDevEnv) {
-                console.warn("[Contador] não foi possível gravar em localStorage:", error);
-            }
-        }
-    };
+	const toNumber = (value) => {
+		const parsed = Number(value);
+		return Number.isFinite(parsed) ? parsed : null;
+	};
 
-    const safeSessionGet = () => {
-        try {
-            return sessionStorage.getItem(SESSION_FLAG);
-        } catch (error) {
-            if (isDevEnv) {
-                console.warn("[Contador] sessionStorage inacessível:", error);
-            }
-            return null;
-        }
-    };
+	const safeLocalGet = (key) => {
+		try {
+			return localStorage.getItem(key);
+		} catch (error) {
+			if (isDevEnv) {
+				console.warn("[ContadorGlobal] localStorage inacessível:", error);
+			}
+			return null;
+		}
+	};
 
-    const safeSessionSet = () => {
-        try {
-            sessionStorage.setItem(SESSION_FLAG, "true");
-        } catch (error) {
-            if (isDevEnv) {
-                console.warn("[Contador] não foi possível gravar em sessionStorage:", error);
-            }
-        }
-    };
+	const safeLocalSet = (key, value) => {
+		try {
+			localStorage.setItem(key, value);
+		} catch (error) {
+			if (isDevEnv) {
+				console.warn("[ContadorGlobal] não foi possível gravar em localStorage:", error);
+			}
+		}
+	};
 
-    const formatValue = (value) => value.toLocaleString("pt-BR");
+	const safeSessionGet = () => {
+		try {
+			return sessionStorage.getItem(SESSION_FLAG);
+		} catch (error) {
+			if (isDevEnv) {
+				console.warn("[ContadorGlobal] sessionStorage inacessível:", error);
+			}
+			return null;
+		}
+	};
 
-    const updateDisplay = (value) => {
-        if (valueEl) {
-            valueEl.textContent = formatValue(value);
-        }
-    };
+	const safeSessionSet = () => {
+		try {
+			sessionStorage.setItem(SESSION_FLAG, "true");
+		} catch (error) {
+			if (isDevEnv) {
+				console.warn("[ContadorGlobal] não foi possível gravar em sessionStorage:", error);
+			}
+		}
+	};
 
-    const renderStoredValue = () => {
-        const stored = toNumber(safeLocalGet(STORAGE_COUNT));
-        const displayValue = stored !== null ? Math.max(stored, BASE_COUNT) : BASE_COUNT;
-        updateDisplay(displayValue);
-    };
+	const formatValue = (value) => value.toLocaleString("pt-BR");
 
-    const runCounter = () => {
-        const start = performance.now();
-        const stored = toNumber(safeLocalGet(STORAGE_COUNT));
-        const baseValue = stored !== null ? Math.max(stored, BASE_COUNT) : BASE_COUNT;
-        const nextValue = baseValue + 1;
-        safeLocalSet(STORAGE_COUNT, String(nextValue));
-        safeSessionSet();
-        updateDisplay(nextValue);
-        logDevTime("contador incrementado (fire-and-forget)", start);
-    };
+	const updateDisplay = (value) => {
+		if (valueEl) {
+			valueEl.textContent = formatValue(value);
+		}
+	};
 
-    renderStoredValue();
+	const runWithIdle = (callback) => {
+		const execute = () => {
+			try {
+				callback();
+			} catch (error) {
+				if (isDevEnv) {
+					console.warn("[ContadorGlobal] erro silencioso:", error);
+				}
+			}
+		};
+		if ("requestIdleCallback" in window) {
+			requestIdleCallback(execute, { timeout: 2200 });
+		} else {
+			window.setTimeout(execute, 2500);
+		}
+	};
 
-    if (safeSessionGet()) {
-        if (isDevEnv) {
-            console.info("[Contador] sessão já contada, exibindo valor armazenado.");
-        }
-        return;
-    }
+	const fetchGlobalValue = async () => {
+		const start = performance.now();
+		const controller = new AbortController();
+		const timeoutId = window.setTimeout(() => controller.abort(), 2500);
+		try {
+			const response = await fetch(`${COUNT_API_BASE}/get/${COUNT_NAMESPACE}/${COUNT_KEY}`, {
+				signal: controller.signal
+			});
+			if (!response.ok) {
+				throw new Error(`Status ${response.status}`);
+			}
+			const payload = await response.json();
+			if (typeof payload.value === "number") {
+				updateDisplay(payload.value);
+				safeLocalSet(STORAGE_COUNT, String(payload.value));
+				if (isDevEnv) {
+					console.info("[ContadorGlobal] valor atualizado:", payload.value);
+				}
+			}
+			logDevTime("fetch do contador global", start);
+		} catch (error) {
+			if (isDevEnv) {
+				console.warn("[ContadorGlobal] fetch GET falhou:", error);
+			}
+		} finally {
+			clearTimeout(timeoutId);
+		}
+	};
 
-    const scheduleRun = () => {
-        const execute = () => {
-            try {
-                runCounter();
-            } catch (error) {
-                if (isDevEnv) {
-                    console.warn("[Contador] erro silencioso:", error);
-                }
-            }
-        };
+	const incrementGlobalCounter = async () => {
+		const start = performance.now();
+		const controller = new AbortController();
+		const timeoutId = window.setTimeout(() => controller.abort(), 2500);
+		try {
+			const response = await fetch(`${COUNT_API_BASE}/hit/${COUNT_NAMESPACE}/${COUNT_KEY}`, {
+				signal: controller.signal
+			});
+			if (!response.ok) {
+				throw new Error(`Status ${response.status}`);
+			}
+			const payload = await response.json();
+			if (typeof payload.value === "number") {
+				updateDisplay(payload.value);
+				safeLocalSet(STORAGE_COUNT, String(payload.value));
+				if (isDevEnv) {
+					console.info("[ContadorGlobal] incremento registrado:", payload.value);
+				}
+			}
+			logDevTime("incremento do contador global", start);
+		} catch (error) {
+			if (isDevEnv) {
+				console.warn("[ContadorGlobal] hit falhou:", error);
+			}
+		} finally {
+			safeSessionSet();
+			clearTimeout(timeoutId);
+		}
+	};
 
-        if ("requestIdleCallback" in window) {
-            requestIdleCallback(execute, { timeout: 2500 });
-        } else {
-            setTimeout(execute, 3200);
-        }
-    };
+	const renderStoredValue = () => {
+		const stored = toNumber(safeLocalGet(STORAGE_COUNT));
+		const displayValue = stored !== null ? Math.max(stored, BASE_COUNT) : BASE_COUNT;
+		updateDisplay(displayValue);
+	};
 
-    scheduleRun();
+	const startPolling = () => {
+		window.setInterval(() => {
+			runWithIdle(fetchGlobalValue);
+		}, POLL_INTERVAL);
+	};
+
+	renderStoredValue();
+	runWithIdle(fetchGlobalValue);
+
+	if (!safeSessionGet()) {
+		runWithIdle(incrementGlobalCounter);
+	}
+
+	startPolling();
 })();
 
 
