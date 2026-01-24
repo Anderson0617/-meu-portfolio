@@ -2021,19 +2021,17 @@ window.addEventListener("resize", ajustarVideosDeFundo);
 window.addEventListener("orientationchange", ajustarVideosDeFundo);
 ajustarVideosDeFundo();
 
+// Backend do contador: Google Apps Script URL = https://script.google.com/macros/s/INSIRA_AQUI/exec
 (function () {
-	const container = document.getElementById("contadorVisitantes");
+const container = document.getElementById("contadorVisitantes");
 	if (!container) {
 		return;
 	}
 
 	const BASE = 373;
-	const NS = "anderson-portfolio";
-	const ACTION = "view";
-	const KEY = "visitantes";
 	const STORAGE_COUNT = "meu-portfolio-contador-global";
 	const POLL_INTERVAL = 25000;
-	const HIT_BASE = `https://counterapi.com/api/${NS}/${ACTION}/${KEY}`;
+	const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyCjjXEHjS7dvXLl7aBrftAWf72zMXpH9-ResTmuhJQ8JvbFfKoJ1gozrPG0fTi3TeK/exec";
 
 	const valueEl = container.querySelector(".contador-visitantes__value");
 
@@ -2090,13 +2088,12 @@ ajustarVideosDeFundo();
 		}
 	};
 
-	const readUrl = () => `${HIT_BASE}?readOnly=true&startNumber=${BASE}&ts=${Date.now()}`;
-	const hitUrl = () =>
-		`${HIT_BASE}?startNumber=${BASE}&readOnly=false&behavior=view&ts=${Date.now()}`;
+	const buildBackendUrl = (action) =>
+		`${BACKEND_URL}?action=${action}&start=${BASE}&ts=${Date.now()}`;
 
 	const loadJsonp = (url) =>
 		new Promise((resolve, reject) => {
-			const callbackName = `counterApiJsonp_${Date.now()}_${Math.round(Math.random() * 1000)}`;
+			const callbackName = `contadorBackend_${Date.now()}_${Math.round(Math.random() * 10000)}`;
 			window[callbackName] = (response) => {
 				delete window[callbackName];
 				document.head.removeChild(script);
@@ -2112,91 +2109,42 @@ ajustarVideosDeFundo();
 			document.head.appendChild(script);
 		});
 
+	const handlePayload = (payload, label) => {
+		if (payload && typeof payload.value === "number") {
+			updateDisplay(payload.value);
+			safeLocalSet(STORAGE_COUNT, String(payload.value));
+			if (isDevEnv) {
+				console.info(`[ContadorGlobal] ${label} valor:`, payload.value);
+			}
+		} else if (isDevEnv) {
+			console.warn(`[ContadorGlobal] ${label} payload inválido`);
+		}
+	};
+
 	const fetchGlobalValue = async () => {
-		const start = performance.now();
-		const controller = new AbortController();
-		const timeoutId = window.setTimeout(() => controller.abort(), 3000);
 		try {
-			const response = await fetch(readUrl(), {
-				signal: controller.signal,
-				cache: "no-store"
-			});
-			if (!response.ok) {
-				throw new Error(`Status ${response.status}`);
-			}
-			const payload = await response.json();
-			if (typeof payload.value === "number") {
-				updateDisplay(payload.value);
-				safeLocalSet(STORAGE_COUNT, String(payload.value));
-				if (isDevEnv) {
-					console.info("[ContadorGlobal] READ valor:", payload.value);
-				}
-			}
-			logDevTime("fetch do contador global", start);
+			const payload = await loadJsonp(buildBackendUrl("get"));
+			handlePayload(payload, "READ");
 		} catch (error) {
 			if (isDevEnv) {
-				console.warn("[ContadorGlobal] READ fetch falhou:", error);
+				console.warn("[ContadorGlobal] READ JSONP falhou:", error);
 			}
-			try {
-				const payload = await loadJsonp(readUrl());
-				if (payload && typeof payload.value === "number") {
-					updateDisplay(payload.value);
-					safeLocalSet(STORAGE_COUNT, String(payload.value));
-					if (isDevEnv) {
-						console.info("[ContadorGlobal] READ JSONP:", payload.value);
-					}
-				}
-			} catch (jsonpError) {
-				if (isDevEnv) {
-					console.warn("[ContadorGlobal] READ JSONP falhou:", jsonpError);
-				}
-			}
-		} finally {
-			clearTimeout(timeoutId);
 		}
 	};
 
 	const hitGlobalCounter = async () => {
-		const start = performance.now();
-		const controller = new AbortController();
-		const timeoutId = window.setTimeout(() => controller.abort(), 3000);
+		if (window.__hitDone) {
+			return;
+		}
+		window.__hitDone = true;
 		try {
-			const response = await fetch(hitUrl(), {
-				signal: controller.signal,
-				cache: "no-store"
-			});
-			if (!response.ok) {
-				throw new Error(`Status ${response.status}`);
-			}
-			const payload = await response.json();
-			if (typeof payload.value === "number") {
-				updateDisplay(payload.value);
-				safeLocalSet(STORAGE_COUNT, String(payload.value));
-				if (isDevEnv) {
-					console.info("[ContadorGlobal] HIT valor:", payload.value);
-				}
-			}
-			logDevTime("incremento do contador global", start);
+			const payload = await loadJsonp(buildBackendUrl("hit"));
+			handlePayload(payload, "HIT");
 		} catch (error) {
 			if (isDevEnv) {
-				console.warn("[ContadorGlobal] HIT falhou:", error);
+				console.warn("[ContadorGlobal] HIT JSONP falhou:", error);
 			}
-			try {
-				const payload = await loadJsonp(hitUrl());
-				if (payload && typeof payload.value === "number") {
-					updateDisplay(payload.value);
-					safeLocalSet(STORAGE_COUNT, String(payload.value));
-					if (isDevEnv) {
-						console.info("[ContadorGlobal] HIT JSONP:", payload.value);
-					}
-				}
-			} catch (jsonpError) {
-				if (isDevEnv) {
-					console.warn("[ContadorGlobal] HIT JSONP falhou:", jsonpError);
-				}
-			}
-		} finally {
-			clearTimeout(timeoutId);
+			await fetchGlobalValue();
 		}
 	};
 
@@ -2214,13 +2162,7 @@ ajustarVideosDeFundo();
 
 	renderStoredValue();
 	runWithIdle(fetchGlobalValue);
-	runWithIdle(() => {
-		if (window.__hitDone) {
-			return;
-		}
-		window.__hitDone = true;
-		hitGlobalCounter().catch(() => {});
-	});
+	runWithIdle(hitGlobalCounter);
 	startPolling();
 })();
 
