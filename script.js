@@ -2031,7 +2031,6 @@ ajustarVideosDeFundo();
 	const COUNT_NAMESPACE = "anderson-portfolio";
 	const COUNT_KEY = "visitantes";
 	const STORAGE_COUNT = "meu-portfolio-contador-global";
-	const SESSION_FLAG = "meu-portfolio-contador-global-session";
 	const BASE_COUNT = 373;
 	const POLL_INTERVAL = 25000;
 
@@ -2066,26 +2065,7 @@ ajustarVideosDeFundo();
 		}
 	};
 
-	const safeSessionGet = () => {
-		try {
-			return sessionStorage.getItem(SESSION_FLAG);
-		} catch (error) {
-			if (isDevEnv) {
-				console.warn("[ContadorGlobal] sessionStorage inacessível:", error);
-			}
-			return null;
-		}
-	};
-
-	const safeSessionSet = () => {
-		try {
-			sessionStorage.setItem(SESSION_FLAG, "true");
-		} catch (error) {
-			if (isDevEnv) {
-				console.warn("[ContadorGlobal] não foi possível gravar em sessionStorage:", error);
-			}
-		}
-	};
+	let hitDisparado = false;
 
 	const formatValue = (value) => value.toLocaleString("pt-BR");
 
@@ -2166,7 +2146,6 @@ ajustarVideosDeFundo();
 				console.warn("[ContadorGlobal] hit falhou:", error);
 			}
 		} finally {
-			safeSessionSet();
 			clearTimeout(timeoutId);
 		}
 	};
@@ -2186,9 +2165,13 @@ ajustarVideosDeFundo();
 	renderStoredValue();
 	runWithIdle(fetchGlobalValue);
 
-	if (!safeSessionGet()) {
-		runWithIdle(incrementGlobalCounter);
-	}
+	runWithIdle(() => {
+		if (hitDisparado) {
+			return;
+		}
+		hitDisparado = true;
+		incrementGlobalCounter().catch(() => {});
+	});
 
 	startPolling();
 })();
