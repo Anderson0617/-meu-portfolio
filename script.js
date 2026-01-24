@@ -88,6 +88,20 @@ if (toggleTema) {
 
 // ====== Preferencias de movimento ======
 const prefereMenosMovimento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const isDevEnv = (() => {
+    const host = window.location.hostname;
+    if (!host) {
+        return window.location.protocol === "file:";
+    }
+    return host === "localhost" || host === "127.0.0.1";
+})();
+const logDevTime = (label, startTime) => {
+    if (!isDevEnv || typeof performance === "undefined" || startTime == null) {
+        return;
+    }
+    const elapsed = Math.round(performance.now() - startTime);
+    console.info(`[Dev] ${label}: ${elapsed}ms`);
+};
 
 // ====== Efeito visual de rastro para cursores precisos ======
 if (!prefereMenosMovimento && window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
@@ -138,6 +152,16 @@ let chatEncerrado = false;
 let mensagemEncerramentoElemento = null;
 let botaoContinuarChat = null;
 let perguntaPendente = null;
+let primeiraChamadaIAInicio = null;
+let primeiraChamadaIALogado = false;
+const registrarTempoPrimeiraChamadaIA = (status) => {
+    if (!isDevEnv || primeiraChamadaIAInicio === null || primeiraChamadaIALogado) {
+        return;
+    }
+    const tempo = Math.round(performance.now() - primeiraChamadaIAInicio);
+    console.info(`[Dev] Anderson.AI ${status} em ${tempo}ms`);
+    primeiraChamadaIALogado = true;
+};
 let placeholderPendente = null;
 let mensagemContinuarElemento = null;
 
@@ -1087,6 +1111,11 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
 
     const enviarPerguntaParaIA = async (pergunta, placeholderElemento) => {
         const botaoEnviar = andersonAIChatForm ? andersonAIChatForm.querySelector(".anderson-ai-chat__send") : null;
+        if (!primeiraChamadaIAInicio) {
+            primeiraChamadaIAInicio = performance.now();
+        }
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 3200);
 
         try {
             if (botaoEnviar) {
@@ -1110,7 +1139,8 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ pergunta })
+                body: JSON.stringify({ pergunta }),
+                signal: controller.signal
             });
 
             if (!resposta.ok) {
@@ -1155,6 +1185,8 @@ if (btnAndersonAI && andersonAIChat && andersonAIChatForm && andersonAIChatInput
                 andersonAIChatStatus.textContent = FALLBACK_MENSAGEM_AI;
             }
         } finally {
+            clearTimeout(timeoutId);
+            registrarTempoPrimeiraChamadaIA("primeira chamada");
             if (botaoEnviar) {
                 botaoEnviar.disabled = false;
             }
@@ -1997,54 +2029,109 @@ ajustarVideosDeFundo();
 
     const valueEl = container.querySelector(".contador-visitantes__value");
     const STORAGE_COUNT = "meu-portfolio-contador-valor";
-    const STORAGE_TIMESTAMP = "meu-portfolio-visita-ultima";
+    const SESSION_FLAG = "meu-portfolio-contador-session";
     const BASE_COUNT = 373;
-
-    const safeGet = (key) => {
-        try {
-            return localStorage.getItem(key);
-        } catch (error) {
-            console.warn("[Contador] localStorage inacessível:", error);
-            return null;
-        }
-    };
-
-    const safeSet = (key, value) => {
-        try {
-            localStorage.setItem(key, value);
-        } catch (error) {
-            console.warn("[Contador] não foi possível gravar em localStorage:", error);
-        }
-    };
 
     const toNumber = (value) => {
         const parsed = Number(value);
         return Number.isFinite(parsed) ? parsed : null;
     };
 
-    const storedCount = toNumber(safeGet(STORAGE_COUNT));
-    let totalCount = storedCount !== null ? Math.max(storedCount, BASE_COUNT) : BASE_COUNT;
-
-    totalCount = Math.max(totalCount, BASE_COUNT) + 1;
-    safeSet(STORAGE_COUNT, String(totalCount));
-    safeSet(STORAGE_TIMESTAMP, new Date().toISOString());
-
-    if (valueEl) {
-        valueEl.textContent = totalCount.toLocaleString("pt-BR");
-    }
-
-    const lastVisit = safeGet(STORAGE_TIMESTAMP);
-    if (lastVisit) {
-        const parsedDate = new Date(lastVisit);
-        if (!Number.isNaN(parsedDate)) {
-            const formatted = parsedDate.toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-            });
-            container.setAttribute("data-ultima-atualizacao", formatted);
+    const safeLocalGet = (key) => {
+        try {
+            return localStorage.getItem(key);
+        } catch (error) {
+            if (isDevEnv) {
+                console.warn("[Contador] localStorage inacessível:", error);
+            }
+            return null;
         }
+    };
+
+    const safeLocalSet = (key, value) => {
+        try {
+            localStorage.setItem(key, value);
+        } catch (error) {
+            if (isDevEnv) {
+                console.warn("[Contador] não foi possível gravar em localStorage:", error);
+            }
+        }
+    };
+
+    const safeSessionGet = () => {
+        try {
+            return sessionStorage.getItem(SESSION_FLAG);
+        } catch (error) {
+            if (isDevEnv) {
+                console.warn("[Contador] sessionStorage inacessível:", error);
+            }
+            return null;
+        }
+    };
+
+    const safeSessionSet = () => {
+        try {
+            sessionStorage.setItem(SESSION_FLAG, "true");
+        } catch (error) {
+            if (isDevEnv) {
+                console.warn("[Contador] não foi possível gravar em sessionStorage:", error);
+            }
+        }
+    };
+
+    const formatValue = (value) => value.toLocaleString("pt-BR");
+
+    const updateDisplay = (value) => {
+        if (valueEl) {
+            valueEl.textContent = formatValue(value);
+        }
+    };
+
+    const renderStoredValue = () => {
+        const stored = toNumber(safeLocalGet(STORAGE_COUNT));
+        const displayValue = stored !== null ? Math.max(stored, BASE_COUNT) : BASE_COUNT;
+        updateDisplay(displayValue);
+    };
+
+    const runCounter = () => {
+        const start = performance.now();
+        const stored = toNumber(safeLocalGet(STORAGE_COUNT));
+        const baseValue = stored !== null ? Math.max(stored, BASE_COUNT) : BASE_COUNT;
+        const nextValue = baseValue + 1;
+        safeLocalSet(STORAGE_COUNT, String(nextValue));
+        safeSessionSet();
+        updateDisplay(nextValue);
+        logDevTime("contador incrementado (fire-and-forget)", start);
+    };
+
+    renderStoredValue();
+
+    if (safeSessionGet()) {
+        if (isDevEnv) {
+            console.info("[Contador] sessão já contada, exibindo valor armazenado.");
+        }
+        return;
     }
+
+    const scheduleRun = () => {
+        const execute = () => {
+            try {
+                runCounter();
+            } catch (error) {
+                if (isDevEnv) {
+                    console.warn("[Contador] erro silencioso:", error);
+                }
+            }
+        };
+
+        if ("requestIdleCallback" in window) {
+            requestIdleCallback(execute, { timeout: 2500 });
+        } else {
+            setTimeout(execute, 3200);
+        }
+    };
+
+    scheduleRun();
 })();
 
 
