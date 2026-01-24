@@ -2027,15 +2027,13 @@ ajustarVideosDeFundo();
 		return;
 	}
 
-	const COUNT_API_BASE = "https://api.countapi.xyz";
-	const COUNT_NAMESPACE = "anderson-portfolio";
-	const COUNT_KEY = "visitantes";
+	const BASE = 373;
+	const NS = "anderson-portfolio";
+	const ACTION = "view";
+	const KEY = "visitantes";
 	const STORAGE_COUNT = "meu-portfolio-contador-global";
-	const BASE_COUNT = 373;
 	const POLL_INTERVAL = 25000;
-
-	// Para definir o valor inicial 373 execute uma única vez (fora do front-end):
-	// curl "https://api.countapi.xyz/create?namespace=anderson-portfolio&key=visitantes&value=373" -H "Content-Type: application/json"
+	const HIT_BASE = `https://counterapi.com/api/${NS}/${ACTION}/${KEY}`;
 
 	const valueEl = container.querySelector(".contador-visitantes__value");
 
@@ -2065,14 +2063,14 @@ ajustarVideosDeFundo();
 		}
 	};
 
-	let hitDisparado = false;
-
-	const formatValue = (value) => value.toLocaleString("pt-BR");
-
 	const updateDisplay = (value) => {
-		if (valueEl) {
-			valueEl.textContent = formatValue(value);
+		if (!valueEl) {
+			if (isDevEnv) {
+				console.warn("[ContadorGlobal] elemento de valor não encontrado.");
+			}
+			return;
 		}
+		valueEl.textContent = value.toLocaleString("pt-BR");
 	};
 
 	const runWithIdle = (callback) => {
@@ -2092,13 +2090,36 @@ ajustarVideosDeFundo();
 		}
 	};
 
+	const readUrl = () => `${HIT_BASE}?readOnly=true&startNumber=${BASE}&ts=${Date.now()}`;
+	const hitUrl = () =>
+		`${HIT_BASE}?startNumber=${BASE}&readOnly=false&behavior=view&ts=${Date.now()}`;
+
+	const loadJsonp = (url) =>
+		new Promise((resolve, reject) => {
+			const callbackName = `counterApiJsonp_${Date.now()}_${Math.round(Math.random() * 1000)}`;
+			window[callbackName] = (response) => {
+				delete window[callbackName];
+				document.head.removeChild(script);
+				resolve(response);
+			};
+			const script = document.createElement("script");
+			script.src = `${url}&callback=${callbackName}`;
+			script.onerror = () => {
+				delete window[callbackName];
+				document.head.removeChild(script);
+				reject(new Error("JSONP error"));
+			};
+			document.head.appendChild(script);
+		});
+
 	const fetchGlobalValue = async () => {
 		const start = performance.now();
 		const controller = new AbortController();
-		const timeoutId = window.setTimeout(() => controller.abort(), 2500);
+		const timeoutId = window.setTimeout(() => controller.abort(), 3000);
 		try {
-			const response = await fetch(`${COUNT_API_BASE}/get/${COUNT_NAMESPACE}/${COUNT_KEY}`, {
-				signal: controller.signal
+			const response = await fetch(readUrl(), {
+				signal: controller.signal,
+				cache: "no-store"
 			});
 			if (!response.ok) {
 				throw new Error(`Status ${response.status}`);
@@ -2108,26 +2129,41 @@ ajustarVideosDeFundo();
 				updateDisplay(payload.value);
 				safeLocalSet(STORAGE_COUNT, String(payload.value));
 				if (isDevEnv) {
-					console.info("[ContadorGlobal] valor atualizado:", payload.value);
+					console.info("[ContadorGlobal] READ valor:", payload.value);
 				}
 			}
 			logDevTime("fetch do contador global", start);
 		} catch (error) {
 			if (isDevEnv) {
-				console.warn("[ContadorGlobal] fetch GET falhou:", error);
+				console.warn("[ContadorGlobal] READ fetch falhou:", error);
+			}
+			try {
+				const payload = await loadJsonp(readUrl());
+				if (payload && typeof payload.value === "number") {
+					updateDisplay(payload.value);
+					safeLocalSet(STORAGE_COUNT, String(payload.value));
+					if (isDevEnv) {
+						console.info("[ContadorGlobal] READ JSONP:", payload.value);
+					}
+				}
+			} catch (jsonpError) {
+				if (isDevEnv) {
+					console.warn("[ContadorGlobal] READ JSONP falhou:", jsonpError);
+				}
 			}
 		} finally {
 			clearTimeout(timeoutId);
 		}
 	};
 
-	const incrementGlobalCounter = async () => {
+	const hitGlobalCounter = async () => {
 		const start = performance.now();
 		const controller = new AbortController();
-		const timeoutId = window.setTimeout(() => controller.abort(), 2500);
+		const timeoutId = window.setTimeout(() => controller.abort(), 3000);
 		try {
-			const response = await fetch(`${COUNT_API_BASE}/hit/${COUNT_NAMESPACE}/${COUNT_KEY}`, {
-				signal: controller.signal
+			const response = await fetch(hitUrl(), {
+				signal: controller.signal,
+				cache: "no-store"
 			});
 			if (!response.ok) {
 				throw new Error(`Status ${response.status}`);
@@ -2137,13 +2173,27 @@ ajustarVideosDeFundo();
 				updateDisplay(payload.value);
 				safeLocalSet(STORAGE_COUNT, String(payload.value));
 				if (isDevEnv) {
-					console.info("[ContadorGlobal] incremento registrado:", payload.value);
+					console.info("[ContadorGlobal] HIT valor:", payload.value);
 				}
 			}
 			logDevTime("incremento do contador global", start);
 		} catch (error) {
 			if (isDevEnv) {
-				console.warn("[ContadorGlobal] hit falhou:", error);
+				console.warn("[ContadorGlobal] HIT falhou:", error);
+			}
+			try {
+				const payload = await loadJsonp(hitUrl());
+				if (payload && typeof payload.value === "number") {
+					updateDisplay(payload.value);
+					safeLocalSet(STORAGE_COUNT, String(payload.value));
+					if (isDevEnv) {
+						console.info("[ContadorGlobal] HIT JSONP:", payload.value);
+					}
+				}
+			} catch (jsonpError) {
+				if (isDevEnv) {
+					console.warn("[ContadorGlobal] HIT JSONP falhou:", jsonpError);
+				}
 			}
 		} finally {
 			clearTimeout(timeoutId);
@@ -2152,7 +2202,7 @@ ajustarVideosDeFundo();
 
 	const renderStoredValue = () => {
 		const stored = toNumber(safeLocalGet(STORAGE_COUNT));
-		const displayValue = stored !== null ? Math.max(stored, BASE_COUNT) : BASE_COUNT;
+		const displayValue = stored !== null ? Math.max(stored, BASE) : BASE;
 		updateDisplay(displayValue);
 	};
 
@@ -2164,15 +2214,13 @@ ajustarVideosDeFundo();
 
 	renderStoredValue();
 	runWithIdle(fetchGlobalValue);
-
 	runWithIdle(() => {
-		if (hitDisparado) {
+		if (window.__hitDone) {
 			return;
 		}
-		hitDisparado = true;
-		incrementGlobalCounter().catch(() => {});
+		window.__hitDone = true;
+		hitGlobalCounter().catch(() => {});
 	});
-
 	startPolling();
 })();
 
