@@ -2031,6 +2031,7 @@ const container = document.getElementById("contadorVisitantes");
 	const BASE = 373;
 	const STORAGE_COUNT = "meu-portfolio-contador-global";
 	const POLL_INTERVAL = 25000;
+	// URL do Apps Script que serve o contador global (ação hit/get com callback JSONP)
 	const BACKEND_URL = "https://script.google.com/macros/s/AKfycbyCjjXEHjS7dvXLl7aBrftAWf72zMXpH9-ResTmuhJQ8JvbFfKoJ1gozrPG0fTi3TeK/exec";
 
 	const valueEl = container.querySelector(".contador-visitantes__value");
@@ -2165,6 +2166,7 @@ const container = document.getElementById("contadorVisitantes");
 	runWithIdle(hitGlobalCounter);
 	startPolling();
 })();
+
 
 
 
