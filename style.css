@@ -640,6 +640,10 @@ body.dark-mode .caixa-sobre {
     line-height: 1.45;
 }
 
+.card .card-description .emoji {
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif;
+}
+
 .card a {
     display: block;
     margin: 6px 0;
